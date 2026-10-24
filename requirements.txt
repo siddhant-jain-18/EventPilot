@@ -1,0 +1,17 @@
+# Pinned per the official Fetch.ai FET payment example (see README "Versions").
+# Python 3.11+ (tested on 3.12).
+uagents==0.25.5
+uagents-core==0.4.9
+
+# Web service for the RSVP endpoint (attendee-facing).
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+
+# HTTP client for ASI1 API + chain verification + health checks.
+httpx==0.27.2
+
+# Configuration loading.
+python-dotenv==1.0.1
+
+# Tests.
+pytest==8.3.4

@@ -1,0 +1,29 @@
+# Secrets and configuration
+.env
+*.address
+
+# Databases and runtime state
+data/*.db
+data/*.db-wal
+data/*.db-shm
+data/*.jsonl
+data/supplier.address
+data/coordinator.address
+data/outreach.address
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

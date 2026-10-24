@@ -1,0 +1,37 @@
+[project]
+name = "workshoppilot"
+version = "1.0.0"
+description = "Multi-agent workshop coordination with approval-bound execution (Fetch-A-Thon 3.0): a coordinator, a supplier and an outreach uAgent orchestrated from ASI:One."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "WorkshopPilot team" }]
+keywords = ["fetchai", "uagents", "asi-one", "agentverse", "hackathon"]
+dependencies = [
+    "uagents==0.25.5",
+    "uagents-core==0.4.9",
+    "pydantic>=2.7,<3",
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.30,<1",
+    "httpx>=0.27,<1",
+    "python-dotenv>=1.0,<2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9", "pytest-asyncio>=0.23"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+    "agent_network: tests that require the uagents package and local processes",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
