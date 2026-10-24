@@ -188,8 +188,7 @@ local agent. For a terminal-only run, use two terminals:
 
 ```bash
 python -m scripts.run_local       # terminal 1
-# terminal 2, after copying the coordinator address from data/coordinator.address
-python -m scripts.chat_cli        # interactive local chat
+python -m scripts.chat_cli        # terminal 2; reads data/coordinator.address
 ```
 
 `scripts/chat_cli.py` is a small uAgents client that sends your text to the
@@ -304,8 +303,7 @@ them inside the same host. Their addresses are unchanged and must match
 
 ### Option B — public host with a stable endpoint (always-on)
 
-Recommended for a VM, a Docker host, or Fly.io/Railway with multiple exposed
-ports.
+Recommended for a VM or Docker host where you can publish ports 8101 and 8104.
 
 1. On the host, clone the repository and create `.env` (`scripts/init_env`).
 2. Set:

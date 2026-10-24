@@ -22,11 +22,11 @@ attendees should click invitation links.
 ```bash
 python -m scripts.init_env
 python -m scripts.seed_demo_data
-python -m scripts.health_check
 ```
 
 If `init_env` refuses because `.env` exists, keep the existing file. Changing
 seeds later changes every agent address and requires re-registering.
+`python -m scripts.health_check` is run after the stack is started (step 2).
 
 ## 1. Choose a deployment mode
 
