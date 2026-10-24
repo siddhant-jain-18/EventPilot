@@ -22,11 +22,15 @@ def create_gateway(coordinator_url: str, rsvp_url: str) -> FastAPI:
     @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
     async def proxy(path: str, request: Request) -> Response:
         route = "/" + path
-        if route == "/":
+        # Agentverse/uAgents integrations have used both the transport URL
+        # itself (/submit) and the public endpoint root during verification.
+        # Accept POST at either location, while keeping GET / a health/status
+        # response for Render and browsers.
+        if route == "/" and request.method != "POST":
             return JSONResponse(
                 {"service": "eventpilot-gateway", "status": "ok", "routes": ["/submit", "/health"]}
             )
-        upstream = coordinator_url if route in coordinator_paths else rsvp_url
+        upstream = coordinator_url if route in coordinator_paths or (route == "/" and request.method == "POST") else rsvp_url
         url = upstream + route
         body = await request.body()
         headers = {
