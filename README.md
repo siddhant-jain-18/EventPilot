@@ -209,9 +209,11 @@ it does not interfere with the four services.
 ## Endpoint reference
 
 Agent ports are **uAgents transport endpoints**, not REST APIs. They accept
-signed uAgents envelopes (and answer the Agentverse Inspector); a browser or
-`curl` request will look empty or return `400` by design. The REST surface is
-the RSVP service:
+signed uAgents envelopes (and answer the Agentverse Inspector). Opening one in
+a browser shows a small JSON status page at `/` (service name, agent address,
+where to go next); any other path except `/agent_info` and `/submit` returns
+`404 {"error": "not found"}` — that is the agent library, not a fault. The REST
+surface is the RSVP service:
 
 | Method | Path | Purpose |
 |---|---|---|

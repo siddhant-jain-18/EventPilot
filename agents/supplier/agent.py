@@ -13,6 +13,7 @@ from payments.ledger import SimulatedChain
 from payments.verification import SimulatedVerifier
 from services.quote_service import SupplierQuoteService
 from shared.config import load_settings
+from shared.landing import add_status_page
 from shared.logging_config import setup_logging
 from shared.messages import QuoteResponse  # noqa: F401  (wire contracts)
 from storage.database import connect, init_db
@@ -53,6 +54,16 @@ def build_agent() -> Agent:
         endpoint=settings.agent_endpoints(8102),
         mailbox=settings.agent_mailbox,
         resolve=False,
+    )
+
+    add_status_page(
+        agent,
+        service="workshoppilot_supplier",
+        hint=(
+            "Internal peer agent for the coordinator (quotes and reservations). "
+            "Nothing to open here; the demo is driven from the coordinator."
+        ),
+        links={"agent_info": "/agent_info", "submit": "/submit"},
     )
 
     @agent.on_event("startup")

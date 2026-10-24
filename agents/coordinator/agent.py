@@ -20,6 +20,7 @@ from services.checklist_service import ChecklistService
 from services.quote_service import CoordinatorQuoteService
 from services.replanning_service import ReplanningService
 from shared.config import load_settings
+from shared.landing import add_status_page
 from shared.logging_config import setup_logging
 from storage.coordinator_repository import CoordinatorRepository
 from storage.database import COORDINATOR_DDL, connect, init_db
@@ -86,6 +87,17 @@ def build_agent() -> Agent:
         mailbox=settings.agent_mailbox,
         resolve=False,
         readme_path="README.md",
+    )
+
+    add_status_page(
+        agent,
+        service="workshoppilot_coordinator",
+        hint=(
+            "This port speaks the uAgents protocol; it is not a web app. Chat with the "
+            "coordinator in ASI:One or the Agentverse Inspector, or run "
+            "`python -m scripts.chat_cli` in a second terminal."
+        ),
+        links={"agent_info": "/agent_info", "submit": "/submit", "asi_one": "https://asi1.ai/"},
     )
 
     @agent.on_event("startup")

@@ -13,6 +13,7 @@ from integrations.email_client import build_provider
 from storage.database import OUTREACH_DDL, connect, init_db
 from storage.outreach_repository import OutreachRepository
 from shared.config import load_settings
+from shared.landing import add_status_page
 from shared.logging_config import setup_logging
 
 
@@ -39,6 +40,16 @@ def build_agent() -> Agent:
         endpoint=settings.agent_endpoints(8103),
         mailbox=settings.agent_mailbox,
         resolve=False,
+    )
+
+    add_status_page(
+        agent,
+        service="workshoppilot_outreach",
+        hint=(
+            "Internal peer agent for the coordinator (invitations and RSVP tracking). "
+            "Nothing to open here; the demo is driven from the coordinator."
+        ),
+        links={"agent_info": "/agent_info", "submit": "/submit"},
     )
 
     @agent.on_event("startup")

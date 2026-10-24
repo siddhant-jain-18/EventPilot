@@ -161,6 +161,7 @@ def main() -> int:
         f"\n  outreach    : http://127.0.0.1:{DEFAULT_AGENT_PORTS['outreach']}"
         f"\n  rsvp        : http://127.0.0.1:{settings.rsvp_port}  (public base: {settings.rsvp_base_url})"
         "\nAgent HTTP endpoints exist for other agents; they are not a REST API."
+        "\nOpening an agent port in a browser shows a status page at /; the RSVP URL above is the web UI."
         "\nKeep this process alive for ASI:One/Agentverse to reach the coordinator. Ctrl+C stops all."
     )
 
