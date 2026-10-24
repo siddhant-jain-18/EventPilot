@@ -24,6 +24,10 @@ services:
         sync: false
       - key: AGENT_ENDPOINT
         value: https://eventpilot-8pjc.onrender.com/submit
+      - key: AGENTVERSE_API_KEY
+        sync: false
+      - key: AGENTVERSE_API_URL
+        value: https://agentverse.ai/v2
       - key: COORDINATOR_SEED
         sync: false
       - key: SUPPLIER_SEED

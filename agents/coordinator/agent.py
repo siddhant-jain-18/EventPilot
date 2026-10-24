@@ -9,6 +9,7 @@ scripts/print_addresses.py).
 
 from __future__ import annotations
 
+import httpx
 from uagents import Agent
 
 from agents.coordinator.handlers import build_agent_protocol, build_chat_protocol
@@ -109,6 +110,8 @@ def build_agent() -> Agent:
             settings.email_provider,
             "ASI1" if llm else "deterministic-only",
         )
+        if settings.agentverse_api_key:
+            await _register_agentverse(ctx, settings, agent.address)
         if settings.agent_endpoint:
             # uAgents always prints an inspector URL for the local listener.
             # For a hosted deployment the browser cannot reach 127.0.0.1, so
@@ -133,6 +136,37 @@ def build_agent() -> Agent:
     agent.include(chat_proto, publish_manifest=True)
     agent.include(build_agent_protocol(service))
     return agent
+
+
+async def _register_agentverse(ctx, settings, address: str) -> None:
+    """Register/update the external-agent listing when explicitly enabled."""
+    endpoint = settings.agent_endpoint
+    if settings.agent_mailbox or not endpoint:
+        ctx.logger.warning(
+            "Agentverse API registration skipped: requires AGENT_MAILBOX=false "
+            "and AGENT_ENDPOINT"
+        )
+        return
+    payload = {
+        "address": address,
+        "name": "eventpilot_coordinator",
+        "agent_type": "uagent",
+        "url": endpoint,
+        "protocols": ["AgentChatProtocol"],
+    }
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.post(
+                f"{settings.agentverse_api_url.rstrip('/')}/agents",
+                headers={"Authorization": f"Bearer {settings.agentverse_api_key}"},
+                json=payload,
+            )
+        if response.is_success:
+            ctx.logger.info("Agentverse API registration completed")
+        else:
+            ctx.logger.error("Agentverse API registration failed (HTTP %s)", response.status_code)
+    except httpx.HTTPError:
+        ctx.logger.exception("Agentverse API registration request failed")
 
 
 agent = build_agent()

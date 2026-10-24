@@ -44,7 +44,13 @@ def main() -> int:
         "address": address,
         "name": name,
         "agent_type": "uagent",
-        "endpoints": [{"url": endpoint, "protocol": "AgentChatProtocol"}],
+        "endpoints": [
+            {
+                "url": endpoint,
+                "protocol": "AgentChatProtocol",
+                "weight": 1,
+            }
+        ],
     }
 
     try:

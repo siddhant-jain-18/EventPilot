@@ -53,6 +53,8 @@ class Settings:
     # https://my-host.example.com/submit). Mutually exclusive with mailbox
     # mode: when AGENT_MAILBOX=true the Agentverse relay is the endpoint.
     agent_endpoint: str = ""
+    agentverse_api_key: str = ""
+    agentverse_api_url: str = "https://agentverse.ai/v2"
 
     # Peer addresses (coordinator -> peers)
     coordinator_seed: str = ""
@@ -193,6 +195,8 @@ def load_settings(**overrides: object) -> Settings:
         agent_port=_env_int("AGENT_PORT", 0),
         agent_mailbox=_env_bool("AGENT_MAILBOX", False),
         agent_endpoint=_env("AGENT_ENDPOINT"),
+        agentverse_api_key=_env("AGENTVERSE_API_KEY"),
+        agentverse_api_url=_env("AGENTVERSE_API_URL", "https://agentverse.ai/v2"),
         coordinator_seed=_env("COORDINATOR_SEED"),
         supplier_seed=_env("SUPPLIER_SEED"),
         outreach_seed=_env("OUTREACH_SEED"),
