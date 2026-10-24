@@ -115,7 +115,10 @@ def build_chat_protocol(service):
         from shared.runtime import TurnResult
 
         try:
-            return call()
+            result = call()
+            if hasattr(result, "__await__"):
+                result = await result
+            return result
         except Exception:
             logger.exception("coordinator turn failed for %s", sender)
             return_error = TurnResult()
