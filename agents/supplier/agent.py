@@ -50,7 +50,7 @@ def build_agent() -> Agent:
         name="workshoppilot_supplier",
         seed=seed,
         port=settings.agent_port or 8102,
-        endpoint=[f"http://127.0.0.1:{settings.agent_port or 8102}/submit"],
+        endpoint=settings.agent_endpoints(8102),
         mailbox=settings.agent_mailbox,
         resolve=False,
     )

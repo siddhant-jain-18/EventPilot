@@ -54,8 +54,25 @@ environment and what was not.
   idempotency keys on reservations/sends/payments, per-sender rate limiting,
   cold-start greeting with demo-data disclaimer, graceful off-topic handling,
   `reset my demo` scoped per sender.
-- **Operational scripts**: `seed_demo_data`, `run_local` (3 agents + RSVP via
-  uvicorn), `health_check`, `reset_demo`, `print_addresses`.
+- **Operational scripts**: `init_env` (cross-OS .env bootstrap with generated
+  secrets and peer addresses), `seed_demo_data`, `run_local` (3 agents + RSVP
+  via uvicorn, preflight validation, crash monitoring), `health_check` (RSVP +
+  all three agent endpoints), `reset_demo`, `print_addresses`, `chat_cli`
+  (local Agent Chat Protocol driver). `Dockerfile` / `.dockerignore` provide a
+  single-container deployment.
+- **ASI:One card round-trip**: card clicks are accepted as validated
+  MetadataContent responses, as JSON text blocks (direct @mention), and as
+  planner-mediated prose naming the approval code; form submissions accept
+  nested `fields`, `form`/`values`, or flat field keys. Unexpected turn errors
+  are converted into an honest reply instead of a silent failure.
+- **Console-mode RSVP demo**: when `EMAIL_PROVIDER=console` nothing is emailed
+  and the coordinator lists the single-use chat RSVP codes for the allowlisted
+  test recipients (never attendee addresses). With SMTP configured, codes
+  travel only inside the email.
+- **Mailbox correctness**: agents no longer pass a hard-coded local endpoint
+  when `AGENT_MAILBOX=true` (uAgents lets an explicit endpoint override the
+  relay). `AGENT_ENDPOINT` supports public deployments; configuring both is a
+  startup error.
 - **Tests**: unit, integration, protocol, and acceptance coverage are included.
   Run the deterministic unit suite first; live-agent tests are opt-in.
 
@@ -63,10 +80,13 @@ environment and what was not.
 
 ```
 python -m pytest tests/unit               # deterministic business rules
-python -m pytest tests/integration        # RSVP/service integration
+python -m pytest tests/integration        # workflow, cards, RSVP integration
+python -m pytest                          # complete suite
 RUN_AGENT_TESTS=1 python -m pytest tests/protocol/test_local_agents.py -m agent_network
+python -m scripts.init_env                # writes .env (fresh checkout)
 python -m scripts.seed_demo_data          # seeds 3 fictional packages
 python -m scripts.print_addresses        # prints addresses from configured seeds
+python -m scripts.health_check            # RSVP + 3 agent endpoints
 ```
 
 Environment: Python 3.12.15; packages installed and pinned in
@@ -82,11 +102,15 @@ uAgents handler layer (all sixteen acceptance steps asserted).
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 python -m pip install -r requirements.txt
-cp .env.example .env          # fill seeds, addresses, RSVP secret
+python -m scripts.init_env    # seeds, RSVP secret and peer addresses
 python -m scripts.seed_demo_data
 python -m scripts.run_local   # supplier :8102, outreach :8103, coordinator :8101, RSVP :8104
 python -m scripts.health_check
 ```
+
+Windows activation differs (`py -3.12 -m venv .venv`,
+`.venv\Scripts\Activate.ps1` or `.venv\Scripts\activate.bat`); the README
+documents macOS/Linux, PowerShell, and Command Prompt paths.
 
 ## 4. Environment variables
 
@@ -95,13 +119,20 @@ All documented in `.env.example`. Required for local run: `COORDINATOR_SEED`,
 `RSVP_SIGNING_SECRET`, `ALLOWED_TEST_RECIPIENTS`. Optional: `ASI1_API_KEY`
 (LLM features; deterministic fallbacks run without it), `EMAIL_PROVIDER=smtp`
 + SMTP settings (real delivery), `PAYMENT_MODE=testnet` + `PAYMENT_RPC_URL`
-(live settlement checklist in `payments/README.md`).
+(live settlement checklist in `payments/README.md`), `AGENT_MAILBOX=true`
+(Agentverse relay), `AGENT_ENDPOINT` (public `/submit` URL; mutually exclusive
+with mailbox), `RSVP_BASE_URL` (public RSVP URL), `RSVP_PORT` (falls back to
+the platform `PORT`, then 8104).
 
 ## 5. Deployment / payment / email status
 
 - Deployment to Agentverse/ASI:One and public hosting: **not performed here** —
-  manual steps in `integrations/agentverse_setup.md`; agent addresses in the
-  README must be filled after first run/registration.
+  registration requires an Agentverse account. Manual steps for mailbox,
+  public-endpoint, Docker and single-port PaaS deployments are in
+  `integrations/agentverse_setup.md`; agent addresses in the README table must
+  be filled after first run/registration. Mailbox mode was verified to start
+  the mailbox client locally (Agentverse reported it needs a mailbox created
+  in the Inspector, which is the documented one-time step).
 - Payment: **SIMULATED — NO ON-CHAIN PAYMENT** was the mode used and verified.
   No live testnet transfer, faucet funding, or RPC verification was performed.
 - Email: **console mode** (masked log records, explicitly "NOT delivered").
@@ -119,11 +150,12 @@ All documented in `.env.example`. Required for local run: `COORDINATOR_SEED`,
 
 ## 7. Manual actions for the project owner
 
-1. Fill `.env` (seeds, peer addresses, RSVP secret) via
-   `scripts/print_addresses.py`.
-2. Register the three agents on Agentverse (mailbox mode) and paste the
-   profile URLs + addresses into README section 9.
-3. Test in a fresh ASI:One session; record the shared chat and the 3–5 min
-   demo video; submit via Devpost.
+1. Fill `.env` with `python -m scripts.init_env` (seeds, RSVP secret, peer
+   addresses).
+2. Register the coordinator on Agentverse (mailbox or public endpoint) and
+   paste the profile URL + addresses into the README section "Registration
+   details judges need".
+3. Test in a fresh ASI:One session, including one card click; record the
+   shared chat and the 3–5 min demo video; submit via Devpost.
 4. Optional: configure ASI1 key, SMTP provider + allowlist, and — only after
    the checklist in `payments/README.md` — testnet payment mode.

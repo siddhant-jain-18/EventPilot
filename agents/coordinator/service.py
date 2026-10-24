@@ -121,6 +121,14 @@ RE_SELECT = re.compile(
     r"\b(?:choose|select|pick|go\s+with|book|take|i\s+want)\b(.{0,60})", re.IGNORECASE
 )
 RE_RSVP = re.compile(r"^\s*rsvp\s+([A-Z0-9]{6})\s*(yes|no)?\s*\.?\s*$", re.IGNORECASE)
+RE_APPROVAL_CODE = re.compile(r"\b(A-[A-Z2-9]{5})\b")
+RE_APPROVE_WORDS = re.compile(
+    r"\b(approve|approved|approval|confirm|confirmed|tap|tapped|click|clicked|yes)\b",
+    re.IGNORECASE,
+)
+RE_REJECT_WORDS = re.compile(
+    r"\b(reject|rejected|cancel|cancelled|canceled|decline|declined|no)\b", re.IGNORECASE
+)
 RE_CITY = re.compile(r"\bin\s+([A-Za-z][A-Za-z ]{1,30}?)(?:\s+on\b|\s+for\b|,|$|\.)")
 RE_TITLE = re.compile(
     r"(?:organise|organize|host|plan|set\s*up|arrange)\s+(?:a|an|the)?\s*"
@@ -186,8 +194,23 @@ class CoordinatorService:
         for notice in notices:
             result.add(notice)
 
+        # ASI:One delivers card clicks as a JSON object in TextContent (direct
+        # @mention) or as prose (planner-mediated). Handle the JSON shape first.
+        card_selection = _card_selection_from_text(text)
+        if card_selection is not None:
+            return self.handle_card_selection(sender, card_selection)
+
         lowered = text.lower()
-        if not text or lowered in ("hi", "hello", "hey", "start", "what can you do"):
+        normalized = lowered.rstrip(" ?!.").strip()
+        if not text or normalized in (
+            "hi",
+            "hello",
+            "hey",
+            "start",
+            "what can you do",
+            "what do you do",
+            "who are you",
+        ):
             self._greeting(result)
             return result
         if "reset" in lowered and "demo" in lowered:
@@ -228,6 +251,23 @@ class CoordinatorService:
             self._handle_approval_command(sender, reject_match.group(1), reject=True, result=result)
             return result
 
+        # Planner-mediated card clicks arrive as prose that names the approval
+        # code (the card button label carries it). Only act when the text also
+        # contains an approval/rejection verb, so a code mentioned casually is
+        # not treated as consent.
+        prose_code = RE_APPROVAL_CODE.search(text)
+        if prose_code:
+            if RE_REJECT_WORDS.search(lowered):
+                self._handle_approval_command(
+                    sender, prose_code.group(1), reject=True, result=result
+                )
+                return result
+            if RE_APPROVE_WORDS.search(lowered):
+                self._handle_approval_command(
+                    sender, prose_code.group(1), reject=False, result=result
+                )
+                return result
+
         selection = self._parse_selection(sender, text)
         if selection is not None:
             self._handle_selection(sender, result=result, **selection)
@@ -242,54 +282,83 @@ class CoordinatorService:
         result = TurnResult()
         import json
 
-        from shared.cards import (
-            META_CARD_KIND,
-            META_CANCELLED,
-            META_SELECTION,
-            META_TEXT,
-            parse_card_response,
-        )
+        from shared.cards import META_CANCELLED, META_SELECTION, META_TEXT
 
-        if metadata.get(META_CANCELLED) == "true":
+        if metadata.get(META_CANCELLED) in ("true", "True", True):
             result.add("Card cancelled — nothing was approved. Tell me what you'd like next.")
             return result
         selection_raw = metadata.get(META_SELECTION)
         if selection_raw:
             try:
-                selection = json.loads(selection_raw)
+                selection = json.loads(selection_raw) if isinstance(selection_raw, str) else selection_raw
             except json.JSONDecodeError:
                 result.add("The card selection could not be parsed; please answer in text instead.")
                 return result
             if not isinstance(selection, dict):
                 result.add("Unexpected card selection format; please answer in text instead.")
                 return result
-            kind = str(selection.get("type", ""))
-            if kind == "select_package":
-                self._handle_selection(
-                    sender,
-                    package_id=selection.get("package_id"),
-                    quote_id=selection.get("quote_id"),
-                    result=result,
-                )
-                return result
-            if kind in ("approve_package", "approve_invitation", "approve"):
-                code = selection.get("approval_code") or selection.get("approval_id")
-                self._handle_approval_command(sender, code, reject=False, result=result)
-                return result
-            if kind == "reject":
-                code = selection.get("approval_code") or selection.get("approval_id")
-                self._handle_approval_command(sender, code, reject=True, result=result)
-                return result
-            if kind == "submit_event_form":
-                fields = selection.get("fields") or {}
-                self._ingest_brief(sender, _fields_to_text(fields), result, submitted_via_form=True)
-                return result
-            result.add("That card action is not recognised; please answer in text.")
-            return result
+            return self.handle_card_selection(sender, selection)
         text = metadata.get(META_TEXT) or ""
         if text:
             return self.handle_user_text(sender, text)
         result.add("I received an empty card response; please answer in text.")
+        return result
+
+    def handle_card_selection(self, sender: str, selection: dict) -> TurnResult:
+        """Execute one parsed card selection (CTA or form submission).
+
+        The card is never trusted for money or state: every id is re-validated
+        against the stored plan/approval before anything happens.
+        """
+        set_correlation_id(new_id("COR"))
+        result = TurnResult()
+        if selection.get("cancelled") in (True, "true", "True"):
+            result.add("Card cancelled — nothing was approved. Tell me what you'd like next.")
+            return result
+        selection = _unwrap_selection(selection)
+        if selection is None:
+            result.add("That card response could not be read; please answer in text instead.")
+            return result
+        kind = str(selection.get("type") or selection.get("action") or "").strip().lower()
+
+        if kind == "select_package":
+            self._handle_selection(
+                sender,
+                package_id=selection.get("package_id"),
+                quote_id=selection.get("quote_id"),
+                result=result,
+            )
+            return result
+        if kind in ("approve_package", "approve_invitation", "approve"):
+            code = (
+                selection.get("approval_code")
+                or selection.get("approval_id")
+                or selection.get("code")
+            )
+            self._handle_approval_command(sender, code, reject=False, result=result)
+            return result
+        if kind in ("reject", "reject_package", "reject_invitation", "cancel"):
+            code = (
+                selection.get("approval_code")
+                or selection.get("approval_id")
+                or selection.get("code")
+            )
+            self._handle_approval_command(sender, code, reject=True, result=result)
+            return result
+        if kind in ("submit_event_form", "form_submit", "submit_form"):
+            fields = selection.get("fields") or selection.get("form") or selection.get("values")
+            if not isinstance(fields, dict):
+                fields = {k: v for k, v in selection.items() if k not in ("type", "action")}
+            self._ingest_brief(sender, _fields_to_text(fields), result, submitted_via_form=True)
+            return result
+        if kind == "back_to_news":  # pragma: no cover - foreign card safety net
+            result.add("That card belongs to a different agent.")
+            return result
+        if not kind and any(k in selection for k in _FORM_FIELD_NAMES):
+            # A form response whose type/action key was dropped by the client.
+            self._ingest_brief(sender, _fields_to_text(selection), result, submitted_via_form=True)
+            return result
+        result.add("That card action is not recognised; please answer in text.")
         return result
 
     # ==================================================================
@@ -1425,10 +1494,24 @@ class CoordinatorService:
                 "the email; attendees can also RSVP in chat. Ask 'how many have confirmed?' anytime."
             )
         elif msg.invitation_status == "logged":
-            result.add(
-                "EMAIL MODE = console (development): the invitation was written to the agent logs, "
-                "NOT delivered. In this mode nothing left the machine. Configure SMTP to deliver for real."
+            codes = [
+                (line.recipient_ref, line.rsvp_code)
+                for line in msg.results
+                if line.rsvp_code
+            ]
+            text = (
+                "EMAIL MODE = console (development): the invitation was written to the agent "
+                "logs, NOT delivered. In this mode nothing left the machine. Configure SMTP "
+                "to deliver for real."
             )
+            if codes:
+                text += (
+                    "\n\nFor this local demo, use the RSVP codes that would have been emailed "
+                    "(single-use, bound to this event):\n"
+                    + "\n".join(f"  {ref} -> RSVP {code} yes" for ref, code in codes)
+                    + "\nDuplicate submissions never inflate the count."
+                )
+            result.add(text)
         elif msg.invitation_status == "unknown":
             result.add(
                 "The provider could not confirm delivery (uncertain outcome). The invitation is "
@@ -1778,18 +1861,92 @@ def _has_any(brief) -> bool:
     )
 
 
+_FORM_FIELD_NAMES = ("title", "city", "date", "attendees", "budget_inr", "equipment")
+
+
+def _unwrap_selection(selection: dict) -> Optional[dict]:
+    """Normalise the shapes ASI:One can deliver for a card interaction."""
+    if not isinstance(selection, dict):
+        return None
+    inner = selection.get("selection")
+    if isinstance(inner, str):
+        import json
+
+        try:
+            inner = json.loads(inner)
+        except json.JSONDecodeError:
+            inner = None
+    if isinstance(inner, dict):
+        return inner
+    data = selection.get("data")
+    if isinstance(data, dict) and isinstance(data.get("selection"), dict):
+        return data["selection"]
+    return selection
+
+
+def _card_selection_from_text(text: str) -> Optional[dict]:
+    """Return a card selection carried as a JSON text block, if any.
+
+    ASI:One sends card clicks as a follow-up ``TextContent``: a flat JSON
+    object for direct @mentions, or prose through the planner. Only the JSON
+    shape is handled here; prose is handled by the command parsers.
+    """
+    import json
+
+    stripped = (text or "").strip()
+    if not (stripped.startswith("{") and stripped.endswith("}")):
+        return None
+    try:
+        data = json.loads(stripped)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(data, dict):
+        return None
+    unwrapped = _unwrap_selection(data)
+    if unwrapped is None:
+        return None
+    if any(
+        key in unwrapped
+        for key in (
+            "type",
+            "action",
+            "approval_code",
+            "approval_id",
+            "cancelled",
+            "fields",
+            "form",
+            "values",
+            *_FORM_FIELD_NAMES,
+        )
+    ):
+        return unwrapped
+    return None
+
+
 def _fields_to_text(fields: dict) -> str:
+    """Turn submitted form fields into one brief sentence for the parsers."""
+    if not isinstance(fields, dict):
+        return ""
+
+    def _value(key: str) -> str:
+        value = fields.get(key)
+        if value is None or isinstance(value, bool):
+            return ""
+        if isinstance(value, list):
+            return ", ".join(str(item) for item in value if str(item).strip())
+        return str(value).strip()
+
     parts = []
-    if fields.get("title"):
-        parts.append(f"organise a {fields['title']}")
-    if fields.get("city"):
-        parts.append(f"in {fields['city']}")
-    if fields.get("date"):
-        parts.append(f"on {fields['date']}")
-    if fields.get("attendees"):
-        parts.append(f"for {fields['attendees']} people")
-    if fields.get("budget_inr"):
-        parts.append(f"with a budget of {fields['budget_inr']} rupees")
-    if fields.get("equipment"):
-        parts.append(f"with {fields['equipment']}")
+    if _value("title"):
+        parts.append(f"organise a {_value('title')}")
+    if _value("city"):
+        parts.append(f"in {_value('city')}")
+    if _value("date"):
+        parts.append(f"on {_value('date')}")
+    if _value("attendees"):
+        parts.append(f"for {_value('attendees')} people")
+    if _value("budget_inr"):
+        parts.append(f"with a budget of {_value('budget_inr')} rupees")
+    if _value("equipment"):
+        parts.append(f"with {_value('equipment')}")
     return " ".join(parts)

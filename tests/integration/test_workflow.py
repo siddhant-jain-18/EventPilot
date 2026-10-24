@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 
 from shared.messages import ReservationRequest
@@ -33,6 +34,13 @@ def test_cold_start_greeting(bus):
     text = joined(bus.turn("agent1qJudge1", "hello"))
     assert "WorkshopPilot" in text
     assert "DEMO DATA" in text
+
+
+def test_capability_question_with_punctuation_is_a_greeting(bus):
+    for prompt in ("what can you do?", "What do you do?", "who are you?"):
+        text = joined(bus.turn("agent1qGreeting", prompt))
+        assert "WorkshopPilot here" in text
+        assert "DEMO DATA" in text
 
 
 def test_off_topic_is_graceful(bus):
@@ -93,25 +101,24 @@ def test_full_golden_path_end_to_end(bus, harness):
     assert "outreach agent" in text
     invitation_code = extract_last_code(text)
 
-    # 3) approve the invitation -> console mode is honestly labelled
+    # 3) approve the invitation -> console mode is honestly labelled and the
+    #    demo-visible chat codes are surfaced (nothing was emailed)
     text = joined(bus.turn(sender, f"approve {invitation_code}"))
     assert "NOT delivered" in text
+    codes = re.findall(r"RSVP ([A-Z0-9]{6}) yes", text)
+    assert len(codes) == 2, "console mode should surface one code per test recipient"
 
     event = harness.coordinator_repo.latest_event_for_owner(sender)
     totals = harness.coordinator_repo.spend_totals(event["event_id"])
     assert totals["committed"] == 1_920_000
     assert totals["proposed"] == 0
 
-    # 4) RSVP via chat code from the invitation email
-    token_row = harness.outreach_repo.conn.execute(
-        "SELECT rsvp_code FROM rsvp_tokens WHERE event_id = ? LIMIT 1", (event["event_id"],)
-    ).fetchone()
-    assert token_row is not None
-    text = joined(bus.turn(sender, f"RSVP {token_row['rsvp_code']} yes"))
+    # 4) RSVP via a chat code from the console-mode send
+    text = joined(bus.turn(sender, f"RSVP {codes[0]} yes"))
     assert "1 confirmed attendee" in text
 
     # 5) duplicate RSVP never inflates the count
-    text = joined(bus.turn(sender, f"RSVP {token_row['rsvp_code']} yes"))
+    text = joined(bus.turn(sender, f"RSVP {codes[0]} yes"))
     assert "already" in text.lower()
     assert harness.outreach_repo.confirmed_count(event["event_id"]) == 1
 
@@ -278,6 +285,64 @@ def test_forged_package_id_rejected(bus, harness):
     )
     text = joined(bus.deliver(turn))
     assert "not part of the current plan" in text or "rejected" in text.lower()
+
+
+def test_asi_one_form_json_submission_creates_event(bus, harness):
+    """ASI:One form cards return the submitted values as JSON text."""
+    sender = "agent1qForm"
+    payload = json.dumps(
+        {
+            "type": "submit_event_form",
+            "fields": {
+                "title": "Robotics Workshop",
+                "city": "Jaipur",
+                "date": "2026-11-15",
+                "attendees": 60,
+                "budget_inr": 20000,
+                "equipment": "projector, wifi",
+            },
+        }
+    )
+    text = joined(bus.turn(sender, payload))
+    event = harness.coordinator_repo.latest_event_for_owner(sender)
+    assert event is not None
+    assert event["expected_attendees"] == 60
+    assert event["budget_inr_paise"] == 2_000_000
+    assert event["city"] == "Jaipur"
+    assert "Requesting quotes" in text
+
+
+def test_asi_one_json_card_clicks_are_honoured(bus, harness):
+    """Carousel and review CTA selections arrive as a flat JSON text block."""
+    sender = "agent1qClicks"
+    bus.turn(sender, BRIEF)
+    text = joined(
+        bus.turn(
+            sender,
+            json.dumps({"type": "select_package", "package_id": "wp-standard-lab"}),
+        )
+    )
+    code = extract_last_code(text)
+    text = joined(
+        bus.turn(sender, json.dumps({"type": "approve_package", "approval_code": code}))
+    )
+    assert "SIMULATED — NO ON-CHAIN PAYMENT" in text
+    event = harness.coordinator_repo.latest_event_for_owner(sender)
+    assert harness.coordinator_repo.spend_totals(event["event_id"])["committed"] == 1_920_000
+
+
+def test_planner_mediated_card_click_prose_is_honoured(bus, harness):
+    """The ASI:One planner may forward a card click as prose plus the code."""
+    sender = "agent1qProse"
+    bus.turn(sender, BRIEF)
+    bus.turn(sender, "choose Standard Lab")
+    code = last_pending_code(harness, sender)
+    text = joined(
+        bus.turn(sender, f"The user tapped the Approve button for approval {code} on the review card.")
+    )
+    assert "accepted" in text.lower()
+    pending = harness.coordinator_repo.pending_approvals_for_owner(sender)
+    assert all(a["code"] != code for a in pending)
 
 
 def test_bare_yes_with_multiple_pending_asks_for_code(bus, harness):

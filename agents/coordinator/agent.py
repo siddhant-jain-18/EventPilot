@@ -76,11 +76,13 @@ def build_agent() -> Agent:
     seed = settings.agent_seed or settings.coordinator_seed
     if not seed:
         raise SystemExit("COORDINATOR_SEED is required to start the coordinator agent")
+    port = settings.agent_port or 8101
     agent = Agent(
         name="workshoppilot_coordinator",
         seed=seed,
-        port=settings.agent_port or 8101,
-        endpoint=[f"http://127.0.0.1:{settings.agent_port or 8101}/submit"],
+        port=port,
+        # None in mailbox mode: passing an endpoint would override the relay.
+        endpoint=settings.agent_endpoints(8101),
         mailbox=settings.agent_mailbox,
         resolve=False,
         readme_path="README.md",

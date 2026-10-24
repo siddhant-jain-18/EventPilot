@@ -122,6 +122,13 @@ class OutreachRepository:
         ).fetchone()
         return dict(row) if row else None
 
+    def tokens_for_invitation(self, invitation_id: str) -> list[dict]:
+        rows = self.conn.execute(
+            "SELECT * FROM rsvp_tokens WHERE invitation_id = ? ORDER BY created_at",
+            (invitation_id,),
+        ).fetchall()
+        return [dict(row) for row in rows]
+
     def get_token_by_code_hash(self, code_hash: str) -> Optional[dict]:
         row = self.conn.execute(
             "SELECT * FROM rsvp_tokens WHERE code_hash = ?", (code_hash,)

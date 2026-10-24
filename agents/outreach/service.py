@@ -184,7 +184,11 @@ class OutreachService:
             if invitation["status"] in (InvitationStatus.SENT.value, InvitationStatus.LOGGED.value):
                 # idempotent replay: return the recorded outcome, never resend
                 response = self._send_response(
-                    msg, invitation, ExternalEffect.COMPLETED.value if invitation["status"] == InvitationStatus.SENT.value else ExternalEffect.NONE.value
+                    msg,
+                    invitation,
+                    ExternalEffect.COMPLETED.value
+                    if invitation["status"] == InvitationStatus.SENT.value
+                    else ExternalEffect.NONE.value,
                 )
                 result.send("coordinator", response)
                 return
@@ -206,6 +210,7 @@ class OutreachService:
             from integrations.email_client import OutgoingEmail
 
             messages = []
+            rsvp_codes: dict[str, str] = {}
             for ref, email in zip(invitation["recipient_refs"], emails):
                 token = issue_rsvp_token(
                     self.settings.rsvp_signing_secret,
@@ -227,6 +232,7 @@ class OutreachService:
                         "created_at": self.now_fn(),
                     }
                 )
+                rsvp_codes[ref] = token.rsvp_code
                 body = (
                     invitation["body"]
                     + f"\n\nRSVP link: {self.settings.rsvp_base_url}/rsvp/{token.token}\n"
@@ -272,7 +278,9 @@ class OutreachService:
             )
             invitation["status"] = final_status
             invitation["provider_message_ids"] = provider_ids
-            response = self._send_response(msg, invitation, side_effect)
+            response = self._send_response(
+                msg, invitation, side_effect, rsvp_codes=rsvp_codes
+            )
         except EventPilotError as err:
             self.repo.audit(
                 "invitation_send_rejected", "invitation", msg.invitation_id, err.code, event_id=msg.event_id
@@ -282,7 +290,22 @@ class OutreachService:
             )
         result.send("coordinator", response)
 
-    def _send_response(self, msg: SendInvitationRequest, invitation: dict, side_effect: str) -> SendInvitationResponse:
+    def _send_response(
+        self,
+        msg: SendInvitationRequest,
+        invitation: dict,
+        side_effect: str,
+        rsvp_codes: dict[str, str] | None = None,
+    ) -> SendInvitationResponse:
+        # RSVP codes are bearer secrets, so they are only echoed when nothing
+        # was emailed (console demo mode). With SMTP they travel in the email.
+        console_demo = self.settings.email_provider == "console"
+        codes = dict(rsvp_codes or {})
+        if console_demo and not codes:
+            codes = {
+                token["recipient_ref"]: token["rsvp_code"]
+                for token in self.repo.tokens_for_invitation(invitation["invitation_id"])
+            }
         return SendInvitationResponse(
             request_id=msg.request_id,
             correlation_id=msg.correlation_id,
@@ -292,7 +315,11 @@ class OutreachService:
             invitation_status=invitation["status"],
             provider_message_ids=invitation.get("provider_message_ids") or [],
             results=[
-                SendResultLine(recipient_ref=ref, status=invitation["status"])
+                SendResultLine(
+                    recipient_ref=ref,
+                    status=invitation["status"],
+                    rsvp_code=codes.get(ref, "") if console_demo else "",
+                )
                 for ref in invitation["recipient_refs"]
             ],
             uncertain=invitation["status"] == InvitationStatus.UNKNOWN.value,

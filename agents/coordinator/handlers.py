@@ -43,6 +43,7 @@ def build_chat_protocol(service):
     from uagents_core.contrib.protocols.chat.cards import (
         extract_card_response,
     )
+    from shared.cards import META_CANCELLED, META_SELECTION
 
     proto = Protocol(name=chat_protocol_spec.name, version=chat_protocol_spec.version)
 
@@ -76,20 +77,54 @@ def build_chat_protocol(service):
         # 1) structured card responses (MetadataContent blocks)
         for block in msg.content:
             if isinstance(block, MetadataContent):
-                response = extract_card_response(block)
-                if response is not None:
-                    result = service.handle_card_response(str(sender), block.metadata)
+                metadata = block.metadata or {}
+                try:
+                    response = extract_card_response(block)
+                except Exception:  # malformed card metadata must never 500 the agent
+                    logger.exception("could not parse a MetadataContent card block")
+                    response = None
+                # Official responses validate as CardResponse. Form cards can
+                # carry nested field values that the flat SDK selection type
+                # rejects, so fall back to the raw selection/cancelled keys.
+                is_card = response is not None or any(
+                    key in metadata for key in (META_SELECTION, META_CANCELLED)
+                )
+                if is_card:
+                    result = await _guard(
+                        ctx,
+                        sender,
+                        lambda: service.handle_card_response(str(sender), metadata),
+                    )
                     for reply in result.replies:
                         await _send_text(ctx, sender, reply.text, reply.card)
                     await _forward(result, ctx)
                     return
 
-        # 2) plain text
+        # 2) plain text (this is also how ASI:One delivers card clicks that
+        #    the planner forwards as JSON or prose)
         text = msg.text()
-        result = service.handle_user_text(str(sender), text)
+        result = await _guard(
+            ctx, sender, lambda: service.handle_user_text(str(sender), text)
+        )
         for reply in result.replies:
             await _send_text(ctx, sender, reply.text, reply.card)
         await _forward(result, ctx)
+
+    async def _guard(ctx, sender, call):
+        """Run one service call and turn unexpected errors into an honest reply."""
+        from shared.runtime import TurnResult
+
+        try:
+            return call()
+        except Exception:
+            logger.exception("coordinator turn failed for %s", sender)
+            return_error = TurnResult()
+            return_error.add(
+                "Something went wrong while processing that message. Nothing was "
+                "approved, spent or sent. Please try again, or send 'status' to "
+                "check the current state."
+            )
+            return return_error
 
     async def _forward(result, ctx):
         for outbound in result.outgoing:

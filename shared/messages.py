@@ -227,6 +227,9 @@ class SendResultLine(StrictModel):
     recipient_ref: str
     status: str  # sent | logged_console | failed | unknown
     provider_message_id: str = ""
+    # Populated only for console mode (nothing was emailed): lets the local
+    # demo exercise the deduplicated RSVP flow without reading the database.
+    rsvp_code: str = ""
 
 
 class SendInvitationResponse(_ResponseBase):

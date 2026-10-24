@@ -14,6 +14,10 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+# Ports used by scripts/run_local.py and scripts/health_check.py.
+DEFAULT_AGENT_PORTS = {"coordinator": 8101, "supplier": 8102, "outreach": 8103}
+DEFAULT_RSVP_PORT = 8104
+
 
 def _env(name: str, default: str = "") -> str:
     return os.environ.get(name, default).strip()
@@ -43,8 +47,12 @@ class Settings:
     # Agents
     agent_name: str = ""
     agent_seed: str = ""
-    agent_port: int = 8100
+    agent_port: int = 0  # per-agent default is applied by the agent module
     agent_mailbox: bool = False
+    # Optional public endpoint advertised to other agents (for example
+    # https://my-host.example.com/submit). Mutually exclusive with mailbox
+    # mode: when AGENT_MAILBOX=true the Agentverse relay is the endpoint.
+    agent_endpoint: str = ""
 
     # Peer addresses (coordinator -> peers)
     coordinator_seed: str = ""
@@ -90,7 +98,7 @@ class Settings:
     rate_limit_per_minute: int = 30
 
     # Ports
-    rsvp_port: int = 8104
+    rsvp_port: int = DEFAULT_RSVP_PORT
 
     @property
     def is_production(self) -> bool:
@@ -104,6 +112,21 @@ class Settings:
         base = Path(self.database_dir)
         base.mkdir(parents=True, exist_ok=True)
         return base / name
+
+    def agent_endpoints(self, default_port: int) -> list[str] | None:
+        """Endpoints to advertise for this agent process.
+
+        - ``AGENT_ENDPOINT`` (public URL) wins for hosted deployments.
+        - In mailbox mode no endpoint is passed, otherwise uAgents would
+          override the Agentverse relay with the local/LAN address.
+        - Otherwise advertise the local ``/submit`` endpoint used by the
+          three-process demo.
+        """
+        if self.agent_endpoint:
+            return [self.agent_endpoint]
+        if self.agent_mailbox:
+            return None
+        return [f"http://127.0.0.1:{self.agent_port or default_port}/submit"]
 
     def validate(self) -> list[str]:
         """Return the list of problems; production also fails on secrets."""
@@ -127,6 +150,21 @@ class Settings:
             problems.append("EMAIL_PROVIDER=smtp requires EMAIL_SMTP_HOST")
         if not self.allowed_test_recipients and self.email_provider == "smtp":
             problems.append("EMAIL_PROVIDER=smtp requires ALLOWED_TEST_RECIPIENTS")
+        if self.agent_mailbox and self.agent_endpoint:
+            problems.append(
+                "AGENT_MAILBOX=true and AGENT_ENDPOINT are mutually exclusive; "
+                "unset AGENT_ENDPOINT when using the Agentverse mailbox relay"
+            )
+        seeds = [
+            seed
+            for seed in (self.coordinator_seed, self.supplier_seed, self.outreach_seed)
+            if seed
+        ]
+        if len(seeds) != len(set(seeds)):
+            problems.append(
+                "COORDINATOR_SEED, SUPPLIER_SEED and OUTREACH_SEED must be different "
+                "(identical seeds produce identical agent addresses)"
+            )
         return problems
 
 
@@ -138,8 +176,9 @@ def load_settings(**overrides: object) -> Settings:
         log_level=_env("LOG_LEVEL", "INFO"),
         agent_name=_env("AGENT_NAME"),
         agent_seed=_env("AGENT_SEED"),
-        agent_port=_env_int("AGENT_PORT", 8100),
+        agent_port=_env_int("AGENT_PORT", 0),
         agent_mailbox=_env_bool("AGENT_MAILBOX", False),
+        agent_endpoint=_env("AGENT_ENDPOINT"),
         coordinator_seed=_env("COORDINATOR_SEED"),
         supplier_seed=_env("SUPPLIER_SEED"),
         outreach_seed=_env("OUTREACH_SEED"),
@@ -175,7 +214,8 @@ def load_settings(**overrides: object) -> Settings:
             _env("AGENT_REPLY_TIMEOUT_SECONDS", "30") or 30
         ),
         rate_limit_per_minute=_env_int("RATE_LIMIT_PER_MINUTE", 30),
-        rsvp_port=_env_int("RSVP_PORT", 8104),
+        # Cloud platforms inject PORT; RSVP_PORT takes precedence when set.
+        rsvp_port=_env_int("RSVP_PORT", _env_int("PORT", DEFAULT_RSVP_PORT)),
     )
     for key, value in overrides.items():
         if value is not None and hasattr(settings, key):

@@ -80,15 +80,19 @@ def test_acceptance_scenario(tmp_path):
     assert invitation_code != package_code
     text = joined(bus.turn(sender, f"approve {invitation_code}"))
 
-    # 9. Explicit development-mode result (console email, never 'sent')
+    # 9. Explicit development-mode result (console email, never 'sent'), with
+    #    the demo-visible chat code because nothing was emailed.
     assert "NOT delivered" in text
     invitation = harness.coordinator_repo.invitations_for_event(event["event_id"])[-1]
     assert invitation["status"] == "logged"
-
-    # 10. Records an RSVP
+    rsvp_codes = re.findall(r"RSVP ([A-Z0-9]{6}) yes", text)
+    assert len(rsvp_codes) == 2
     token_row = harness.outreach_repo.conn.execute(
         "SELECT rsvp_code FROM rsvp_tokens WHERE event_id = ? LIMIT 1", (event["event_id"],)
     ).fetchone()
+    assert token_row["rsvp_code"] in rsvp_codes
+
+    # 10. Records an RSVP with the chat code from the console-mode send
     text = joined(bus.turn(sender, f"RSVP {token_row['rsvp_code']} yes"))
 
     # 11. Reports the correct registration count
