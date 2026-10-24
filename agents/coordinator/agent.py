@@ -152,7 +152,7 @@ async def _register_agentverse(ctx, settings, address: str) -> None:
         "name": "eventpilot_coordinator",
         "agent_type": "uagent",
         "url": endpoint,
-        "protocols": ["AgentChatProtocol"],
+        "endpoints": [{"url": endpoint, "weight": 1}],
     }
     try:
         async with httpx.AsyncClient(timeout=20) as client:
@@ -164,7 +164,12 @@ async def _register_agentverse(ctx, settings, address: str) -> None:
         if response.is_success:
             ctx.logger.info("Agentverse API registration completed")
         else:
-            ctx.logger.error("Agentverse API registration failed (HTTP %s)", response.status_code)
+            detail = response.text[:500].replace("\n", " ")
+            ctx.logger.error(
+                "Agentverse API registration failed (HTTP %s): %s",
+                response.status_code,
+                detail,
+            )
     except httpx.HTTPError:
         ctx.logger.exception("Agentverse API registration request failed")
 
