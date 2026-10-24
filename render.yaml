@@ -6,12 +6,20 @@ services:
     dockerContext: .
     healthCheckPath: /health
     autoDeploy: true
+    disk:
+      name: eventpilot-data
+      mountPath: /app/data
+      sizeGB: 1
     envVars:
       # Keep application secrets and deployment-specific values in Render.
       # Render supplies PORT automatically; scripts/run_local.py maps it to
       # the attendee-facing RSVP server.
       - key: AGENT_MAILBOX
         value: "true"
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_DIR
+        value: /app/data
       - key: RSVP_BASE_URL
         sync: false
       - key: COORDINATOR_SEED
@@ -25,4 +33,18 @@ services:
       - key: OUTREACH_ADDRESS
         sync: false
       - key: RSVP_SIGNING_SECRET
+        sync: false
+      - key: EMAIL_PROVIDER
+        value: smtp
+      - key: EMAIL_SMTP_HOST
+        sync: false
+      - key: EMAIL_SMTP_PORT
+        value: "587"
+      - key: EMAIL_SMTP_USER
+        sync: false
+      - key: EMAIL_SMTP_PASSWORD
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: ALLOWED_TEST_RECIPIENTS
         sync: false

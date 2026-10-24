@@ -46,3 +46,15 @@ def test_rsvp_port_falls_back_to_platform_port(monkeypatch):
     assert load_settings().rsvp_port == 10000
     monkeypatch.setenv("RSVP_PORT", "9104")
     assert load_settings().rsvp_port == 9104
+
+
+def test_production_secret_must_be_long_enough():
+    settings = Settings(app_env="production", rsvp_signing_secret="too-short")
+    assert any("at least 32" in problem for problem in settings.validate())
+
+
+def test_invalid_runtime_values_are_rejected():
+    settings = Settings(app_env="production", rsvp_port=0, rate_limit_per_minute=0)
+    problems = settings.validate()
+    assert any("between 1 and 65535" in problem for problem in problems)
+    assert any("must be positive" in problem for problem in problems)

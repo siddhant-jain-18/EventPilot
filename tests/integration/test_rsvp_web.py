@@ -57,6 +57,14 @@ def test_health(client):
     response = http.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
+    assert response.headers["x-content-type-options"] == "nosniff"
+
+
+def test_ready_checks_database(client):
+    http, repo, settings = client
+    response = http.get("/ready")
+    assert response.status_code == 200
+    assert response.json()["status"] == "ready"
 
 
 def test_full_rsvp_flow_and_duplicate_protection(client):

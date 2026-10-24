@@ -19,6 +19,13 @@ RUN python -m pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Do not run the application as root. The database directory is created at
+# runtime and must be mounted writable when a persistent volume is attached.
+RUN useradd --create-home --uid 10001 appuser \
+    && mkdir -p /app/data \
+    && chown -R appuser:appuser /app
+USER appuser
+
 # Demo inventory is seeded idempotently on every start.
 CMD ["sh", "-c", "python -m scripts.seed_demo_data && python -m scripts.run_local"]
 

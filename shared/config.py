@@ -131,6 +131,18 @@ class Settings:
     def validate(self) -> list[str]:
         """Return the list of problems; production also fails on secrets."""
         problems: list[str] = []
+        if self.app_env.lower() not in ("development", "test", "staging", "production"):
+            problems.append("APP_ENV must be development, test, staging, or production")
+        if self.log_level.upper() not in ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"):
+            problems.append("LOG_LEVEL must be DEBUG, INFO, WARNING, ERROR, or CRITICAL")
+        if self.rsvp_port < 1 or self.rsvp_port > 65535:
+            problems.append("RSVP_PORT/PORT must be between 1 and 65535")
+        if self.rate_limit_per_minute < 1:
+            problems.append("RATE_LIMIT_PER_MINUTE must be positive")
+        if self.rsvp_token_ttl_seconds < 60:
+            problems.append("RSVP_TOKEN_TTL_SECONDS must be at least 60 seconds")
+        if self.is_production and self.rsvp_signing_secret and len(self.rsvp_signing_secret) < 32:
+            problems.append("RSVP_SIGNING_SECRET must be at least 32 characters in production")
         if self.is_production:
             for name, value in (
                 ("RSVP_SIGNING_SECRET", self.rsvp_signing_secret),

@@ -88,6 +88,15 @@ def build_router(repos, settings) -> APIRouter:
     async def health():
         return {"status": "ok", "service": "workshoppilot-rsvp"}
 
+    @router.get("/ready")
+    async def ready():
+        """Readiness probe: verifies the shared outreach database is usable."""
+        try:
+            outreach.conn.execute("SELECT 1").fetchone()
+        except Exception:
+            raise HTTPException(status_code=503, detail="database unavailable")
+        return {"status": "ready", "service": "workshoppilot-rsvp"}
+
     def _validate_token_or_404(token: str) -> dict:
         try:
             payload = verify_rsvp_token(settings.rsvp_signing_secret, token)

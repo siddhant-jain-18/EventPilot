@@ -217,7 +217,8 @@ surface is the RSVP service:
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/health` | Liveness probe; used by `scripts.health_check` and platform health checks |
+| `GET` | `/health` | Liveness probe; used by platform health checks |
+| `GET` | `/ready` | Readiness probe; verifies the RSVP database is available |
 | `GET` | `/rsvp/{token}` | Attendee registration page (signed, single-use token) |
 | `POST` | `/rsvp/{token}` | Record an RSVP (form-encoded; duplicate-safe) |
 | `GET` | `/internal/events/{event_id}/count` | Signed count query (`x-wp-timestamp` + `x-wp-signature` HMAC headers) |
