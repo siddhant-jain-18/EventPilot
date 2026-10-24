@@ -15,13 +15,15 @@ services:
       # Render supplies PORT automatically; scripts/run_local.py maps it to
       # the attendee-facing RSVP server.
       - key: AGENT_MAILBOX
-        value: "true"
+        value: "false"
       - key: APP_ENV
         value: production
       - key: DATABASE_DIR
         value: /app/data
       - key: RSVP_BASE_URL
         sync: false
+      - key: AGENT_ENDPOINT
+        value: https://eventpilot-8pjc.onrender.com/submit
       - key: COORDINATOR_SEED
         sync: false
       - key: SUPPLIER_SEED

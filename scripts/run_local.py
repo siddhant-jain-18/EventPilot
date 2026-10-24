@@ -90,6 +90,12 @@ def _preflight(settings) -> list[str]:
 
 def main() -> int:
     settings = load_settings()
+    # A single-port PaaS (Render/Railway) exposes PORT publicly. Keep the
+    # RSVP and agent listeners private and place a gateway on that port so
+    # both /submit and RSVP URLs work from the same public origin.
+    platform_port = int(os.environ["PORT"]) if os.environ.get("PORT") else None
+    single_port = platform_port is not None and not os.environ.get("RSVP_PORT")
+    internal_rsvp_port = 8104 if single_port else settings.rsvp_port
     problems = _preflight(settings)
     if problems:
         print("Cannot start the stack:\n- " + "\n- ".join(problems))
@@ -141,7 +147,7 @@ def main() -> int:
                     "--host",
                     "0.0.0.0",
                     "--port",
-                    str(settings.rsvp_port),
+                    str(internal_rsvp_port),
                 ],
                 cwd=REPO_ROOT,
                 env=env,
@@ -153,13 +159,28 @@ def main() -> int:
         children.append((spec["name"], child))
         print(f"started {spec['name']} (pid {child.pid})")
 
+    if single_port:
+        gateway = subprocess.Popen(
+            [
+                sys.executable,
+                "-m",
+                "scripts.public_gateway",
+                "--port",
+                str(platform_port),
+            ],
+            cwd=REPO_ROOT,
+            env=env,
+        )
+        children.append(("gateway", gateway))
+        print(f"started gateway (pid {gateway.pid}) on public port {platform_port}")
+
     print(
         "\nLocal stack running:"
         f"\n  coordinator : http://127.0.0.1:{DEFAULT_AGENT_PORTS['coordinator']}"
         f" (AGENT_MAILBOX={str(settings.agent_mailbox).lower()})"
         f"\n  supplier    : http://127.0.0.1:{DEFAULT_AGENT_PORTS['supplier']}"
         f"\n  outreach    : http://127.0.0.1:{DEFAULT_AGENT_PORTS['outreach']}"
-        f"\n  rsvp        : http://127.0.0.1:{settings.rsvp_port}  (public base: {settings.rsvp_base_url})"
+        f"\n  rsvp        : http://127.0.0.1:{internal_rsvp_port}  (public base: {settings.rsvp_base_url})"
         "\nAgent HTTP endpoints exist for other agents; they are not a REST API."
         "\nOpening an agent port in a browser shows a status page at /; the RSVP URL above is the web UI."
         "\nKeep this process alive for ASI:One/Agentverse to reach the coordinator. Ctrl+C stops all."
