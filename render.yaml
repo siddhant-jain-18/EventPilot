@@ -34,6 +34,14 @@ services:
         sync: false
       - key: OUTREACH_ADDRESS
         sync: false
+      # Optional ASI:One-compatible LLM access. Enter the secret in Render;
+      # never commit it to the repository.
+      - key: ASI1_API_KEY
+        sync: false
+      - key: ASI1_BASE_URL
+        value: https://api.asi1.ai/v1
+      - key: ASI1_MODEL
+        value: asi1-mini
       - key: RSVP_SIGNING_SECRET
         sync: false
       - key: EMAIL_PROVIDER
