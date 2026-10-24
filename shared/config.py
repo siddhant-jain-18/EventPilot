@@ -155,6 +155,8 @@ class Settings:
                 "AGENT_MAILBOX=true and AGENT_ENDPOINT are mutually exclusive; "
                 "unset AGENT_ENDPOINT when using the Agentverse mailbox relay"
             )
+        if self.agent_endpoint and not self.agent_endpoint.rstrip("/").endswith("/submit"):
+            problems.append("AGENT_ENDPOINT must end with /submit (it is the uAgents envelope endpoint)")
         seeds = [
             seed
             for seed in (self.coordinator_seed, self.supplier_seed, self.outreach_seed)

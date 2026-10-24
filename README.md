@@ -20,7 +20,7 @@ verification, recipient allowlists, idempotency, and the audit trail.
 
 **Contents:** [Demo](#run-the-judge-demo) · [Local setup](#local-setup-all-operating-systems)
 · [Endpoints](#endpoint-reference) · [Agentverse / public deployment](#deploy-for-agentverse-and-asi-one)
-· [Troubleshooting](#troubleshooting) · [Tests](#tests) · [Limitations](#known-limitations)
+· [Troubleshooting](#troubleshooting) · [Tests](#tests) · [Limitations](#known-limitations-and-submission-checklist)
 
 ## What to show a judge
 
@@ -295,8 +295,8 @@ printed at startup. The effective endpoint is one of:
    description, and the README (published from `readme_path` at startup).
 6. From the profile, choose **Chat with Agent** to open ASI:One, or open
    <https://asi1.ai> in a fresh session and paste the demo prompt.
-7. Change one seed or stop the process and confirm the agent goes offline in
-   Agentverse: that proves the process is the runtime, not Agentverse.
+7. Stop the process and send a message: it is not answered until you restart,
+   proving the process is the runtime and Agentverse is not hosting it.
 
 The supplier and outreach agents stay on localhost; the coordinator reaches
 them inside the same host. Their addresses are unchanged and must match

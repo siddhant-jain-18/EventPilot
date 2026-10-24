@@ -43,7 +43,7 @@ def build_chat_protocol(service):
     from uagents_core.contrib.protocols.chat.cards import (
         extract_card_response,
     )
-    from shared.cards import META_CANCELLED, META_SELECTION
+    from shared.cards import META_CANCELLED, META_SELECTION, META_TEXT
 
     proto = Protocol(name=chat_protocol_spec.name, version=chat_protocol_spec.version)
 
@@ -87,7 +87,7 @@ def build_chat_protocol(service):
                 # carry nested field values that the flat SDK selection type
                 # rejects, so fall back to the raw selection/cancelled keys.
                 is_card = response is not None or any(
-                    key in metadata for key in (META_SELECTION, META_CANCELLED)
+                    key in metadata for key in (META_SELECTION, META_CANCELLED, META_TEXT)
                 )
                 if is_card:
                     result = await _guard(

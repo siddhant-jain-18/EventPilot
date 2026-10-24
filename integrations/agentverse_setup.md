@@ -147,7 +147,8 @@ These platforms expose one HTTP port via `$PORT`.
 2. Claim the mailbox once **from your laptop** with the same `.env` (same
    seeds = same address): run locally, open the Inspector, Connect → Mailbox.
    Mailboxes belong to the agent address, not to the process, so the deployed
-   agent will claim the same mailbox.
+   agent will claim the same mailbox. Stop the local process before starting
+   the hosted one so only one process polls the mailbox.
 3. Deploy the Dockerfile or use the start command:
 
    ```bash
