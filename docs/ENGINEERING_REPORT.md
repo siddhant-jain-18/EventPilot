@@ -1,7 +1,7 @@
 # WorkshopPilot — Engineering Report (coding agent handback)
 
-Date: 2026-10-24. Scope: full implementation of the Implementation Handoff
-("EventPilot" build specification) reconciled with Plan.md, delivered as a
+Date: 2026-10-24. Scope: implementation and documentation handback for the
+Fetch-A-Thon 3.0 build, delivered as a
 GitHub-ready repository. This report states what was actually verified in this
 environment and what was not.
 
@@ -56,18 +56,17 @@ environment and what was not.
   `reset my demo` scoped per sender.
 - **Operational scripts**: `seed_demo_data`, `run_local` (3 agents + RSVP via
   uvicorn), `health_check`, `reset_demo`, `print_addresses`.
-- **Tests**: 156 passed, 1 skipped (optional live-agent smoke test;
-  `RUN_AGENT_TESTS=1` runs it — it passed in this environment).
+- **Tests**: unit, integration, protocol, and acceptance coverage are included.
+  Run the deterministic unit suite first; live-agent tests are opt-in.
 
 ## 2. Verification (exact commands and results)
 
 ```
-python -m pytest                         -> 156 passed, 1 skipped in ~3.3s
+python -m pytest tests/unit               # deterministic business rules
+python -m pytest tests/integration        # RSVP/service integration
 RUN_AGENT_TESTS=1 python -m pytest tests/protocol/test_local_agents.py -m agent_network
-                                         -> 1 passed (deterministic distinct agent1q... identities)
-python -m scripts.seed_demo_data         -> seeded 3 demo packages (verified output)
-python -m scripts.reset_demo             -> cleared demo state (verified)
-python -m scripts.print_addresses        -> prints agent addresses from seeds (verified shape)
+python -m scripts.seed_demo_data          # seeds 3 fictional packages
+python -m scripts.print_addresses        # prints addresses from configured seeds
 ```
 
 Environment: Python 3.12.15; packages installed and pinned in
@@ -82,7 +81,7 @@ uAgents handler layer (all sixteen acceptance steps asserted).
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 cp .env.example .env          # fill seeds, addresses, RSVP secret
 python -m scripts.seed_demo_data
 python -m scripts.run_local   # supplier :8102, outreach :8103, coordinator :8101, RSVP :8104

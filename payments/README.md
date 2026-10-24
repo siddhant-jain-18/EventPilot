@@ -1,5 +1,10 @@
 # Payments
 
+The hackathon demo uses `PAYMENT_MODE=simulated`. This is intentional: the
+workflow demonstrates approval and independent verification without claiming
+that real money moved. Start with the root README, then use this page when
+explaining or changing the payment rail.
+
 ## Modes
 
 | Mode | What actually happens | How it is labelled |
@@ -28,6 +33,9 @@ the payment rail. There is **no exchange rate** between them and the code
 never converts one into the other.
 
 ## Enabling testnet mode (checklist)
+
+Do not enable this during the first demo run. Test the complete simulated flow
+first and keep the UI labels honest.
 
 1. Follow the official FET payment example from the Fetch.ai docs to pin its
    dependency set; do not invent SDK methods.

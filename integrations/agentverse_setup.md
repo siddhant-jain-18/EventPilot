@@ -1,5 +1,8 @@
 # Agentverse & ASI:One setup guide
 
+This is the **online/hackathon deployment path**. For a local-only demo, start
+with the [root README](../README.md), especially its Quick start section.
+
 This guide registers the three WorkshopPilot agents so the coordinator is
 reachable from ASI:One. Registration does NOT host your code — the processes
 must run somewhere (laptop, VM, or container) for the demo. Verify every step
@@ -8,9 +11,10 @@ against the current Agentverse docs; UI labels change.
 ## 0. Prerequisites
 
 ```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env   # then fill in the seeds and settings
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+cp .env.example .env
 ```
 
 ## 1. Generate unique seeds
@@ -28,7 +32,7 @@ python3 -c "import secrets; print(secrets.token_hex(24))"
 uAgents addresses are derived deterministically from (name, seed):
 
 ```bash
-python3 scripts/print_addresses.py
+python -m scripts.print_addresses
 ```
 
 Put the printed SUPPLIER and OUTREACH addresses into `SUPPLIER_ADDRESS` and
@@ -38,8 +42,8 @@ the same agent names/seeds consistently — changing either changes the address.
 ## 3. Local run (mailbox mode)
 
 ```bash
-python3 scripts/seed_demo_data.py
-python3 scripts/run_local.py
+python -m scripts.seed_demo_data
+python -m scripts.run_local
 ```
 
 `run_local.py` starts supplier (:8102), outreach (:8103), coordinator (:8101)
@@ -50,7 +54,7 @@ supplier/outreach agents stay on local endpoints by default.
 Verification:
 
 ```bash
-python3 scripts/health_check.py
+python -m scripts.health_check
 ```
 
 ## 4. Register on Agentverse (manual steps)

@@ -26,7 +26,7 @@ PROCESSES: list[dict] = [
     {
         "name": "rsvp",
         "module": "uvicorn",
-        "args": ["rsvp_web.app:app_from_env()", "--host", "0.0.0.0", "--port", "${RSVP_PORT}"],
+        "args": ["rsvp_web.app:app_from_env", "--factory", "--host", "0.0.0.0", "--port", "${RSVP_PORT}"],
     },
 ]
 
@@ -67,7 +67,8 @@ def main() -> int:
         env.update({k: v for k, v in spec.get("env", {}).items()})
         if spec["module"] == "uvicorn":
             args = [
-                "rsvp_web.app:app_from_env()",
+                "rsvp_web.app:app_from_env",
+                "--factory",
                 "--host",
                 "0.0.0.0",
                 "--port",
