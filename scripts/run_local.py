@@ -145,7 +145,7 @@ def main() -> int:
                     "rsvp_web.app:app_from_env",
                     "--factory",
                     "--host",
-                    "0.0.0.0",
+                    "127.0.0.1" if single_port else "0.0.0.0",
                     "--port",
                     str(internal_rsvp_port),
                 ],

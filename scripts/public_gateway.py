@@ -17,11 +17,15 @@ import uvicorn
 
 def create_gateway(coordinator_url: str, rsvp_url: str) -> FastAPI:
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
-    coordinator_paths = {"/", "/submit", "/agent_info"}
+    coordinator_paths = {"/submit", "/agent_info"}
 
     @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
     async def proxy(path: str, request: Request) -> Response:
         route = "/" + path
+        if route == "/":
+            return JSONResponse(
+                {"service": "eventpilot-gateway", "status": "ok", "routes": ["/submit", "/health"]}
+            )
         upstream = coordinator_url if route in coordinator_paths else rsvp_url
         url = upstream + route
         body = await request.body()
