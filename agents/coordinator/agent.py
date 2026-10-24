@@ -122,7 +122,7 @@ def build_agent() -> Agent:
             if public_base.endswith("/submit"):
                 public_base = public_base[: -len("/submit")]
             ctx.logger.info(
-                "Public inspector: https://agentverse.ai/inspect/?uri=%s&address=%s",
+                "Agentverse public inspector (manual registration may still be needed): https://agentverse.ai/inspect/?uri=%s&address=%s",
                 quote(public_base, safe=""),
                 agent.address,
             )
@@ -139,7 +139,22 @@ def build_agent() -> Agent:
 
 
 async def _register_agentverse(ctx, settings, address: str) -> None:
-    """Register/update the external-agent listing when explicitly enabled."""
+    """Register/update the external-agent listing when explicitly enabled.
+
+    Agentverse's API moved to a challenge/response flow: POST /v1/auth/challenge
+    (with the agent address) returns a JWT; the registration POST to /v1/agents
+    must include that challenge plus a signed challenge_response. The coordinator
+    only has the API key, not the agent private key, so it cannot complete the
+    signed challenge. This function therefore intentionally skips the v1
+    challenge-based registration and logs the exact reason so the deploy logs
+    are informative instead of noisy.
+
+    The coordinator is still published through uAgents' built-in Almanac/API
+    registration (visible in the logs just above this line) and reaches ASI:One
+    via the Agentverse mailbox relay when AGENT_MAILBOX=true, or via the public
+    endpoint when AGENT_ENDPOINT is set. A manual one-shot registration that
+    holds the agent key is available in scripts/register_agentverse.py.
+    """
     endpoint = settings.agent_endpoint
     if settings.agent_mailbox or not endpoint:
         ctx.logger.warning(
@@ -147,31 +162,19 @@ async def _register_agentverse(ctx, settings, address: str) -> None:
             "and AGENT_ENDPOINT"
         )
         return
-    payload = {
-        "address": address,
-        "name": "eventpilot_coordinator",
-        "agent_type": "uagent",
-        "url": endpoint,
-        "endpoints": [{"url": endpoint, "weight": 1}],
-    }
-    try:
-        async with httpx.AsyncClient(timeout=20) as client:
-            response = await client.post(
-                f"{settings.agentverse_api_url.rstrip('/')}/agents",
-                headers={"Authorization": f"Bearer {settings.agentverse_api_key}"},
-                json=payload,
-            )
-        if response.is_success:
-            ctx.logger.info("Agentverse API registration completed")
-        else:
-            detail = response.text[:500].replace("\n", " ")
-            ctx.logger.error(
-                "Agentverse API registration failed (HTTP %s): %s",
-                response.status_code,
-                detail,
-            )
-    except httpx.HTTPError:
-        ctx.logger.exception("Agentverse API registration request failed")
+    if not settings.agentverse_api_key:
+        ctx.logger.warning(
+            "Agentverse API registration skipped: AGENTVERSE_API_KEY not set"
+        )
+        return
+    ctx.logger.info(
+        "Agentverse API registration skipped: v1 API requires a signed "
+        "challenge/response that the coordinator cannot produce without the agent "
+        "private key. Almanac/API registration + mailbox relay / public endpoint "
+        "provide the visible listing. To register anyway, run "
+        "scripts/register_agentverse.py with the agent key on a trusted host."
+    )
+    return
 
 
 agent = build_agent()
