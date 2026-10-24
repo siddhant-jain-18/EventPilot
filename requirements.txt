@@ -8,7 +8,7 @@ fastapi==0.115.6
 uvicorn[standard]==0.32.1
 
 # HTTP client for ASI1 API + chain verification + health checks.
-httpx==0.27.2
+httpx==0.28.1
 
 # Configuration loading.
 python-dotenv==1.0.1
