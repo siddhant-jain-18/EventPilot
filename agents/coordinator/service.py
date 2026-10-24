@@ -304,6 +304,36 @@ class CoordinatorService:
         result.add("I received an empty card response; please answer in text.")
         return result
 
+    def handle_card_proposal(
+        self, sender: str, card: shared.cards.Card | None, metadata: dict[str, str]
+    ) -> TurnResult:
+        """Handle an inbound card proposal from another agent / ASI:One.
+
+        In Fetch-A-Thon 3.0 terms this is the Agent Chat Protocol interaction
+        where one agent renders a card for the user and another agent (here the
+        coordinator) is asked to act on it or reply with its own card. The
+        coordinator treats the proposal as a structured prompt: it records the
+        inbound card id, replies with a short acknowledgement, and continues
+        with the plain-text flow so the workflow remains usable even when
+        multi-agent card routing is not fully wired.
+        """
+        set_correlation_id(new_id("COR"))
+        result = TurnResult()
+        card_id = (
+            card.card_id.hex if card is not None and getattr(card, "card_id", None) else None
+        ) or metadata.get("card_id")
+        logger.info(
+            "coordinator received card proposal %s from %s",
+            card_id,
+            sender,
+        )
+        result.add(
+            "I received a card from another agent. I will handle the request as a normal "
+            "chat prompt so the workflow keeps working. If you want to act on the card,"
+            " reply with the action or choice shown on it."
+        )
+        return result
+
     def handle_card_selection(self, sender: str, selection: dict) -> TurnResult:
         """Execute one parsed card selection (CTA or form submission).
 

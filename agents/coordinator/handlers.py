@@ -40,10 +40,18 @@ def build_chat_protocol(service):
         TextContent,
         chat_protocol_spec,
     )
-    from uagents_core.contrib.protocols.chat.cards import (
-        extract_card_response,
-    )
     from shared.cards import META_CANCELLED, META_SELECTION, META_TEXT
+
+    # EventPilot defines its own card response extraction so the coordinator
+    # can additionally accept raw card proposal blocks as first-class chat
+    # interactions (ASI:One may deliver a card proposal as a MetadataContent
+    # block inside a ChatMessage). The official helpers are still used for
+    # response validation and for outbound card construction.
+    from shared.cards import (
+        extract_card_response,
+        parse_card_response,
+        parse_card_request,
+    )
 
     proto = Protocol(name=chat_protocol_spec.name, version=chat_protocol_spec.version)
 
@@ -74,31 +82,43 @@ def build_chat_protocol(service):
         if any(isinstance(c, EndSessionContent) for c in msg.content):
             return
 
-        # 1) structured card responses (MetadataContent blocks)
+        # 1) structured card interactions (MetadataContent blocks).
+        # This covers both inbound card responses (user/ASI:One clicked a card)
+        # and inbound card proposals (ASI:One forwarding a card that another
+        # agent rendered) so the coordinator can participate in a multi-agent
+        # card conversation rather than only reacting to button clicks.
         for block in msg.content:
-            if isinstance(block, MetadataContent):
-                metadata = block.metadata or {}
-                try:
-                    response = extract_card_response(block)
-                except Exception:  # malformed card metadata must never 500 the agent
-                    logger.exception("could not parse a MetadataContent card block")
-                    response = None
-                # Official responses validate as CardResponse. Form cards can
-                # carry nested field values that the flat SDK selection type
-                # rejects, so fall back to the raw selection/cancelled keys.
-                is_card = response is not None or any(
-                    key in metadata for key in (META_SELECTION, META_CANCELLED, META_TEXT)
+            if not isinstance(block, MetadataContent):
+                continue
+            metadata = block.metadata or {}
+            try:
+                response = parse_card_response(metadata)
+            except Exception:  # malformed card metadata must never 500 the agent
+                logger.exception("could not parse a card response block")
+                response = None
+            try:
+                request = parse_card_request(metadata)
+            except Exception:
+                logger.exception("could not parse a card request block")
+                request = None
+            if response is None and request is None:
+                continue
+            if request is not None:
+                logger.info(
+                    "received inbound card proposal %s for event %s",
+                    request.card_id,
+                    metadata.get("event_id", "?"),
                 )
-                if is_card:
-                    result = await _guard(
-                        ctx,
-                        sender,
-                        lambda: service.handle_card_response(str(sender), metadata),
-                    )
-                    for reply in result.replies:
-                        await _send_text(ctx, sender, reply.text, reply.card)
-                    await _forward(result, ctx)
-                    return
+            handle_payload = (
+                lambda: service.handle_card_response(str(sender), metadata)
+                if response is not None
+                else lambda: service.handle_card_proposal(str(sender), request, metadata)
+            )
+            result = await _guard(ctx, sender, handle_payload)
+            for reply in result.replies:
+                await _send_text(ctx, sender, reply.text, reply.card)
+            await _forward(result, ctx)
+            return
 
         # 2) plain text (this is also how ASI:One delivers card clicks that
         #    the planner forwards as JSON or prose)
