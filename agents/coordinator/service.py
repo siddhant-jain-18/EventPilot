@@ -102,7 +102,7 @@ HELP_TEXT = (
     "What I can do:\n"
     "- Plan an event from a free-text brief (I will ask for anything missing).\n"
     "- Get supplier quotes and show which packages fit capacity and budget.\n"
-    "- Approve ONE exact package with a code (e.g. 'approve A-7F3K').\n"
+    "- Approve ONE exact package with a code (e.g. 'approve A-7F3KX').\n"
     "- Reserve it and settle the deposit (simulated by default, labelled as such).\n"
     "- Draft invitations and require approval before any send.\n"
     "- Track RSVPs (link or chat code) and report counts.\n"
@@ -923,7 +923,7 @@ class CoordinatorService:
                 return
         else:
             if reject:
-                result.add("Tell me which approval to reject, e.g. 'reject A-7F3K'.")
+                result.add("Tell me which approval to reject, e.g. 'reject A-7F3KX'.")
                 return
             if len(pending) == 0:
                 result.add("There is nothing pending approval right now.")

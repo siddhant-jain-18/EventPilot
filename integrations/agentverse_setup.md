@@ -125,9 +125,13 @@ instead of a mailbox.
    curl -o /dev/null -w "%{http_code}\n" https://your-host.example.com:8101/submit
    ```
 
-5. The Inspector URL in the log now contains the public endpoint, so you can
-   open it from any machine and use **Connect → Mailbox** if you also want the
-   relay. Without a mailbox, the public endpoint is the route.
+5. uAgents prints the Inspector URL for the local listener even when a public
+   endpoint is configured. Open the **Public inspector** line that the
+   coordinator logs when `AGENT_ENDPOINT` is set, or build it yourself:
+   `https://agentverse.ai/inspect/?uri=<url-encoded public base>&address=<agent address>`
+   (strip the trailing `/submit` from the URI). From there, use
+   **Connect → Mailbox** only if you also want the relay; otherwise the public
+   endpoint is already the route.
 6. Register the profile in Agentverse (step 4) and chat from ASI:One.
 
 The endpoint must be reachable from the internet. `127.0.0.1`, `localhost`,
@@ -219,7 +223,7 @@ as a fallback.
 | `Agent mailbox not found: create one using the agent inspector` | Process is fine, mailbox missing. Open the Inspector → Connect → Mailbox. |
 | `Endpoint configuration overrides mailbox setting` | Both `AGENT_ENDPOINT` and `AGENT_MAILBOX=true` are set. Unset one; startup now fails fast with this message. |
 | ASI:One gets no reply | Process not running, mailbox not connected, or wrong address in the profile. Check the log and `data/coordinator.address`. |
-| Inspector cannot see the local agent | Allow Local Network Access in Chrome/Brave site settings, or use the public-endpoint deployment. |
+| Inspector cannot see the local agent | Allow Local Network Access in Chrome/Brave site settings, or open the **Public inspector** URL logged when `AGENT_ENDPOINT` is set. |
 | `curl: (7) Failed to connect` to `:8101` | The coordinator is not running or the port is not exposed/published. `scripts.health_check` shows which listener is missing. |
 | Invitation links point to `localhost` | Set `RSVP_BASE_URL` to the public RSVP URL. Chat RSVP codes still work in console mode. |
 | Agentverse profile README is stale | Restart the coordinator: `readme_path` is published on startup. |

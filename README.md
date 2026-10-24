@@ -37,7 +37,7 @@ Then demonstrate:
    cards are unavailable).
 2. The supplier returns Starter ₹14,500, Standard ₹19,200, and Premium ₹26,000
    (blocked by the budget).
-3. One exact package is approved with a short code (`approve A-7F3K`).
+3. One exact package is approved with a short code (`approve A-7F3KX`).
 4. Reservation and the symbolic deposit happen only after approval. The
    payment says **SIMULATED — NO ON-CHAIN PAYMENT**.
 5. Invitation sending requires a second approval bound to the exact content
@@ -316,6 +316,10 @@ ports.
    RSVP_BASE_URL=https://your-host.example.com
    ```
 
+   The coordinator logs a `Public inspector:` line built from this URL; the
+   standard Inspector line still points at `127.0.0.1` because that is the
+   local listener.
+
 3. Expose **8101** (agent transport, for `AGENT_ENDPOINT`) and **8104**
    (RSVP). Ports 8102/8103 can stay private. Terminate TLS in front of both
    (reverse proxy, load balancer, or platform ingress).
@@ -340,10 +344,13 @@ ports.
    curl -o /dev/null -w "%{http_code}\n" https://your-host.example.com:8101/submit
    ```
 
-6. Open the Inspector URL from the coordinator log (it now uses the public
-   endpoint), click **Connect → Mailbox** only if you also want the relay;
-   otherwise the public endpoint is already the route. Register the profile
-   in Agentverse and chat from ASI:One.
+6. uAgents logs the Inspector URL for its local listener. For a hosted agent,
+   use the **Public inspector** line the coordinator prints when
+   `AGENT_ENDPOINT` is set (or build
+   `https://agentverse.ai/inspect/?uri=<url-encoded public base>&address=<agent address>`
+   yourself, without the `/submit` suffix). Use **Connect → Mailbox** only if
+   you also want the relay; otherwise the public endpoint is already the
+   route. Register the profile in Agentverse and chat from ASI:One.
 
 `AGENT_ENDPOINT` must be the URL ASI:One can reach; `127.0.0.1` and
 `localhost` will fail for remote users. If your platform gives you a single

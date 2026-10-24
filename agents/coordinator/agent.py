@@ -97,6 +97,20 @@ def build_agent() -> Agent:
             settings.email_provider,
             "ASI1" if llm else "deterministic-only",
         )
+        if settings.agent_endpoint:
+            # uAgents always prints an inspector URL for the local listener.
+            # For a hosted deployment the browser cannot reach 127.0.0.1, so
+            # print the inspector URL for the public endpoint as well.
+            from urllib.parse import quote
+
+            public_base = settings.agent_endpoint.rstrip("/")
+            if public_base.endswith("/submit"):
+                public_base = public_base[: -len("/submit")]
+            ctx.logger.info(
+                "Public inspector: https://agentverse.ai/inspect/?uri=%s&address=%s",
+                quote(public_base, safe=""),
+                agent.address,
+            )
         try:
             (settings.database_path("coordinator.address")).write_text(agent.address)
         except OSError:
