@@ -4,7 +4,7 @@ The official Fetch.ai FET payment example defines a buyer/seller message
 lifecycle. This project maps its stages onto the inter-agent contracts in
 `shared/messages.py` so the flow stays honest and inspectable:
 
-| Official stage  | WorkshopPilot contract                    | Owner     |
+| Official stage  | EventPilot contract                    | Owner     |
 |-----------------|-------------------------------------------|-----------|
 | quote           | QuoteResponse.payment terms (deposit)     | supplier  |
 | RequestPayment  | ReservationResponse.payment_requirement   | supplier  |

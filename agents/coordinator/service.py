@@ -87,7 +87,7 @@ from storage.database import new_id
 logger = get_logger("coordinator")
 
 GREETING = (
-    "WorkshopPilot here. I turn a workshop brief into an approved, budget-checked plan: "
+    "EventPilot here. I turn a workshop brief into an approved, budget-checked plan: "
     "quotes from a supplier agent, capacity/budget checks in deterministic code, one exact "
     "approval per action, labelled payment evidence, invitation approval, RSVP tracking and "
     "re-planning when attendance changes.\n"

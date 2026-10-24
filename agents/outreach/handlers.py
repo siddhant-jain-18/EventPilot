@@ -16,7 +16,7 @@ logger = get_logger("outreach.agent")
 def build_protocol(service):
     from uagents import Protocol
 
-    proto = Protocol(name="WorkshopPilotOutreach", version="1.0.0")
+    proto = Protocol(name="EventPilotOutreach", version="1.0.0")
 
     @proto.on_message(InvitationDraftRequest, replies=None)
     async def on_draft_request(ctx, sender, msg):

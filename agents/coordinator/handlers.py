@@ -152,7 +152,7 @@ def build_agent_protocol(service):
     """Inter-agent protocol for responses coming back from peers."""
     from uagents import Protocol
 
-    proto = Protocol(name="WorkshopPilotCoordinator", version="1.0.0")
+    proto = Protocol(name="EventPilotCoordinator", version="1.0.0")
 
     @proto.on_message(QuoteResponse, replies=None)
     async def on_quote_response(ctx, sender, msg):

@@ -18,9 +18,9 @@ def main() -> int:
         return 1
     settings = load_settings()
     for role, seed_env, name in (
-        ("COORDINATOR", settings.coordinator_seed, "workshoppilot_coordinator"),
-        ("SUPPLIER", settings.supplier_seed, "workshoppilot_supplier"),
-        ("OUTREACH", settings.outreach_seed, "workshoppilot_outreach"),
+        ("COORDINATOR", settings.coordinator_seed, "eventpilot_coordinator"),
+        ("SUPPLIER", settings.supplier_seed, "eventpilot_supplier"),
+        ("OUTREACH", settings.outreach_seed, "eventpilot_outreach"),
     ):
         if not seed_env:
             print(f"{role}: SEED MISSING - set {'_'.join([role, 'SEED'])} in .env")

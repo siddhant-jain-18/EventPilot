@@ -37,7 +37,7 @@ def create_app(repos: dict, settings) -> FastAPI:
     """
     setup_logging(settings.log_level)
     app = FastAPI(
-        title="WorkshopPilot RSVP",
+        title="EventPilot RSVP",
         version="1.0.0",
         docs_url=None,
         redoc_url=None,

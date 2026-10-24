@@ -1,6 +1,6 @@
-# WorkshopPilot demo image: three uAgents + the RSVP web service.
-# Build:  docker build -t workshoppilot .
-# Run:    docker run --rm --env-file .env -p 8104:8104 workshoppilot
+# EventPilot demo image: three uAgents + the RSVP web service.
+# Build:  docker build -t EventPilot .
+# Run:    docker run --rm --env-file .env -p 8104:8104 EventPilot
 #
 # The RSVP service must be reachable by attendees, so map its port (or set
 # RSVP_PORT to the platform's PORT). Agents can reach each other over

@@ -82,4 +82,4 @@ DEMO_PACKAGES: list[SupplierPackage] = [
 ]
 
 DEMO_CATALOG: dict[str, SupplierPackage] = {p.package_id: p for p in DEMO_PACKAGES}
-SUPPLIER_ID = "workshoppilot-supplier-demo"
+SUPPLIER_ID = "EventPilot-supplier-demo"

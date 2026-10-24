@@ -34,20 +34,20 @@ def last_pending_code(harness, sender: str) -> str:
 
 def test_cold_start_greeting(bus):
     text = joined(bus.turn("agent1qJudge1", "hello"))
-    assert "WorkshopPilot" in text
+    assert "EventPilot" in text
     assert "DEMO DATA" in text
 
 
 def test_capability_question_with_punctuation_is_a_greeting(bus):
     for prompt in ("what can you do?", "What do you do?", "who are you?"):
         text = joined(bus.turn("agent1qGreeting", prompt))
-        assert "WorkshopPilot here" in text
+        assert "EventPilot here" in text
         assert "DEMO DATA" in text
 
 
 def test_off_topic_is_graceful(bus):
     text = joined(bus.turn("agent1qJudge1", "tell me a joke"))
-    assert "WorkshopPilot" in text or "I didn't" in text
+    assert "EventPilot" in text or "I didn't" in text
 
 
 def test_missing_fields_trigger_form_card(bus):
@@ -221,7 +221,7 @@ def test_per_sender_isolation(bus, harness):
     text = joined(bus.turn(b, f"approve {code}"))
     assert "no approval matches" in text.lower()
     text = joined(bus.turn(b, "status"))
-    assert "WorkshopPilot here" in text  # B has no events -> greeting
+    assert "EventPilot here" in text  # B has no events -> greeting
 
 
 def test_duplicate_reservation_action_id_is_idempotent(bus, harness):

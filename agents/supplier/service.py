@@ -119,7 +119,7 @@ class SupplierService:
                 correlation_id=msg.correlation_id,
                 event_id=msg.event_id,
                 plan_version=msg.plan_version,
-                supplier_id="workshoppilot-supplier-demo",
+                supplier_id="EventPilot-supplier-demo",
                 quotes=lines,
             )
             self.repo.audit(

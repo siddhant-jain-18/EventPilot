@@ -57,8 +57,8 @@ def main() -> int:
         return 1
 
     client = Agent(
-        name="workshoppilot_chat_cli",
-        seed=settings.agent_seed or "workshoppilot-chat-cli-local-demo-seed",
+        name="eventpilot_chat_cli",
+        seed=settings.agent_seed or "EventPilot-chat-cli-local-demo-seed",
         port=8123,
         endpoint=["http://127.0.0.1:8123/submit"],
         resolve=False,

@@ -28,4 +28,4 @@ class CountResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str
-    service: str = "workshoppilot-rsvp"
+    service: str = "EventPilot-rsvp"

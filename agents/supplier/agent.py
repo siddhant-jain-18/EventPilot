@@ -48,7 +48,7 @@ def build_agent() -> Agent:
     if not seed:
         raise SystemExit("SUPPLIER_SEED is required to start the supplier agent")
     agent = Agent(
-        name="workshoppilot_supplier",
+        name="eventpilot_supplier",
         seed=seed,
         port=settings.agent_port or 8102,
         endpoint=settings.agent_endpoints(8102),
@@ -58,7 +58,7 @@ def build_agent() -> Agent:
 
     add_status_page(
         agent,
-        service="workshoppilot_supplier",
+        service="eventpilot_supplier",
         hint=(
             "Internal peer agent for the coordinator (quotes and reservations). "
             "Nothing to open here; the demo is driven from the coordinator."

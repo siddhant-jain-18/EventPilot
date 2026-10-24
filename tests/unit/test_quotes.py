@@ -73,7 +73,7 @@ def _response(event_id="E-1", plan_version=1, request_id="REQ-1", tamper=None):
         request_id=request_id,
         event_id=event_id,
         plan_version=plan_version,
-        supplier_id="workshoppilot-supplier-demo",
+        supplier_id="EventPilot-supplier-demo",
         quotes=[line],
     )
 

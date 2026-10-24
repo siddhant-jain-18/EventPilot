@@ -27,9 +27,9 @@ def test_agent_identities_are_deterministic_and_distinct():
         from uagents import Agent
     except ImportError:
         pytest.skip("uagents not installed")
-    supplier = Agent(name="workshoppilot_supplier", seed="seed-aaa-0001", resolve=False)
-    supplier_again = Agent(name="workshoppilot_supplier", seed="seed-aaa-0001", resolve=False)
-    coordinator = Agent(name="workshoppilot_coordinator", seed="seed-bbb-0001", resolve=False)
+    supplier = Agent(name="eventpilot_supplier", seed="seed-aaa-0001", resolve=False)
+    supplier_again = Agent(name="eventpilot_supplier", seed="seed-aaa-0001", resolve=False)
+    coordinator = Agent(name="eventpilot_coordinator", seed="seed-bbb-0001", resolve=False)
     assert supplier.address == supplier_again.address, "same name+seed must give the same address"
     assert supplier.address != coordinator.address
     assert supplier.address.startswith("agent1q")

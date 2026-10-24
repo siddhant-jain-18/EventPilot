@@ -2,9 +2,9 @@
 ![Hackathon project](https://img.shields.io/badge/hackathon-Fetch.ai-5F43F1)
 ![Python](https://img.shields.io/badge/python-3.11%2B-3776AB)
 
-# WorkshopPilot (EventPilot)
+# EventPilot (EventPilot)
 
-WorkshopPilot is a Fetch.ai multi-agent event coordination system for the
+EventPilot is a Fetch.ai multi-agent event coordination system for the
 Fetch-A-Thon 3.0 hackathon. It helps an organiser plan a workshop, compare
 supplier packages, request approval before committing money, send an approved
 invitation, collect RSVPs, and re-plan when attendance changes.
@@ -227,7 +227,7 @@ Manual check (any OS; `curl` ships with Windows 10+):
 
 ```bash
 curl http://127.0.0.1:8104/health
-# {"status":"ok","service":"workshoppilot-rsvp"}
+# {"status":"ok","service":"EventPilot-rsvp"}
 ```
 
 Quick sanity check that the coordinator is listening:
@@ -327,12 +327,12 @@ Recommended for a VM or Docker host where you can publish ports 8101 and 8104.
 4. Run the stack:
 
    ```bash
-   docker build -t workshoppilot .
-   docker run -d --name workshoppilot \
+   docker build -t EventPilot .
+   docker run -d --name EventPilot \
      --env-file .env \
      -p 8101:8101 -p 8104:8104 \
      -v "$PWD/data:/app/data" \
-     workshoppilot
+     EventPilot
    ```
 
    On Windows PowerShell, replace `"$PWD/data:/app/data"` with

@@ -79,7 +79,7 @@ def build_agent() -> Agent:
         raise SystemExit("COORDINATOR_SEED is required to start the coordinator agent")
     port = settings.agent_port or 8101
     agent = Agent(
-        name="workshoppilot_coordinator",
+        name="eventpilot_coordinator",
         seed=seed,
         port=port,
         # None in mailbox mode: passing an endpoint would override the relay.
@@ -91,7 +91,7 @@ def build_agent() -> Agent:
 
     add_status_page(
         agent,
-        service="workshoppilot_coordinator",
+        service="eventpilot_coordinator",
         hint=(
             "This port speaks the uAgents protocol; it is not a web app. Chat with the "
             "coordinator in ASI:One or the Agentverse Inspector, or run "

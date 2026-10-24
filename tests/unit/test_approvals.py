@@ -42,7 +42,7 @@ def make_quote(event):
         "quote_id": "Q-TEST0001",
         "event_id": event["event_id"],
         "plan_version": event["current_plan_version"],
-        "supplier_id": "workshoppilot-supplier-demo",
+        "supplier_id": "EventPilot-supplier-demo",
         "package_id": "wp-standard-lab",
         "package_name": "Standard Lab",
         "capacity": 80,

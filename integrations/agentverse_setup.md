@@ -1,6 +1,6 @@
 # Agentverse & ASI:One deployment guide
 
-This guide gets WorkshopPilot from a local checkout to an agent that judges can
+This guide gets EventPilot from a local checkout to an agent that judges can
 chat with in ASI:One. For a local-only demo, the [root README](../README.md) is
 enough.
 
@@ -108,12 +108,12 @@ instead of a mailbox.
 3. Run the container:
 
    ```bash
-   docker build -t workshoppilot .
-   docker run -d --name workshoppilot \
+   docker build -t EventPilot .
+   docker run -d --name EventPilot \
      --env-file .env \
      -p 8101:8101 -p 8104:8104 \
      -v "$PWD/data:/app/data" \
-     workshoppilot
+     EventPilot
    ```
 
    (PowerShell: use `"${PWD}/data:/app/data"`; omit the volume line for an
@@ -169,7 +169,7 @@ For the coordinator:
 
 1. Agentverse → **My Agents** → the coordinator (Mailbox tag or public
    endpoint).
-2. Set a name and handle, e.g. `workshoppilot_coordinator`.
+2. Set a name and handle, e.g. `eventpilot_coordinator`.
 3. Use a task-oriented description: "Plan a workshop, compare supplier
    packages, approve a budget, send invitations and track RSVPs."
 4. The README is published from `readme_path="README.md"` at startup. Keep the

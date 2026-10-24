@@ -8,7 +8,7 @@ kinds ``carousel`` | ``detail`` | ``form`` | ``review`` | ``custom``, plus
 ``MetadataContent`` blocks of a ``ChatMessage`` — all metadata values are
 strings and the payload is a JSON string.
 
-This module adds the WorkshopPilot domain builders on top and a stricter
+This module adds the EventPilot domain builders on top and a stricter
 outbound validator (64 KB payload ceiling, string-only metadata, no terminal
 flag on cards that expect a response). Plain-text narration is ALWAYS emitted
 alongside a card so the workflow remains fully usable if a card fails to

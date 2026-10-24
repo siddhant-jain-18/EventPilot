@@ -1,4 +1,4 @@
-# WorkshopPilot — Engineering Report (coding agent handback)
+# EventPilot — Engineering Report (coding agent handback)
 
 Date: 2026-10-24. Scope: implementation and documentation handback for the
 Fetch-A-Thon 3.0 build, delivered as a

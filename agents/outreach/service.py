@@ -57,7 +57,7 @@ def _template_invitation(req: InvitationDraftRequest) -> tuple[str, str]:
         f"Expected attendance: {req.expected_attendees}\n"
         + (f"Note: {req.note}\n" if req.note else "")
         + "\nPlease confirm your attendance with your personal RSVP link or code below.\n\n"
-        "— WorkshopPilot (demo; inventory and prices are demo data)"
+        "— EventPilot (demo; inventory and prices are demo data)"
     )
     return subject, body
 

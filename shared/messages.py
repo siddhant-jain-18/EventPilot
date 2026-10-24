@@ -84,7 +84,7 @@ class _ResponseBase(StrictModel):
 
 
 class QuoteRequest(_RequestBase):
-    TYPE: ClassVar[str] = "workshoppilot.quote_request"
+    TYPE: ClassVar[str] = "EventPilot.quote_request"
     attendee_count: int = Field(ge=1, le=10000)
     equipment_requirements: list[str] = Field(default_factory=list)
     amendment_of_reservation_id: Optional[str] = None
@@ -106,7 +106,7 @@ class QuoteLine(StrictModel):
 
 
 class QuoteResponse(_ResponseBase):
-    TYPE: ClassVar[str] = "workshoppilot.quote_response"
+    TYPE: ClassVar[str] = "EventPilot.quote_response"
     supplier_id: str = ""
     quotes: list[QuoteLine] = Field(default_factory=list)
 
@@ -117,7 +117,7 @@ class QuoteResponse(_ResponseBase):
 
 
 class ReservationRequest(_RequestBase):
-    TYPE: ClassVar[str] = "workshoppilot.reservation_request"
+    TYPE: ClassVar[str] = "EventPilot.reservation_request"
     quote_id: str
     package_id: str
     attendee_count: int
@@ -137,7 +137,7 @@ class PaymentRequirement(StrictModel):
 
 
 class ReservationResponse(_ResponseBase):
-    TYPE: ClassVar[str] = "workshoppilot.reservation_response"
+    TYPE: ClassVar[str] = "EventPilot.reservation_response"
     reservation_id: str = ""
     reservation_status: str = ""
     payment_requirement: Optional[PaymentRequirement] = None
@@ -145,14 +145,14 @@ class ReservationResponse(_ResponseBase):
 
 
 class ReservationSupersedeRequest(_RequestBase):
-    TYPE: ClassVar[str] = "workshoppilot.reservation_supersede_request"
+    TYPE: ClassVar[str] = "EventPilot.reservation_supersede_request"
     reservation_id: str
     action_id: str
     reason: str = ""
 
 
 class ReservationSupersedeResponse(_ResponseBase):
-    TYPE: ClassVar[str] = "workshoppilot.reservation_supersede_response"
+    TYPE: ClassVar[str] = "EventPilot.reservation_supersede_response"
     reservation_id: str = ""
     reservation_status: str = ""
 
@@ -163,7 +163,7 @@ class ReservationSupersedeResponse(_ResponseBase):
 
 
 class PaymentStatusRequest(_RequestBase):
-    TYPE: ClassVar[str] = "workshoppilot.payment_status_request"
+    TYPE: ClassVar[str] = "EventPilot.payment_status_request"
     reservation_id: str
     quote_id: str
     payment_id: str
@@ -176,7 +176,7 @@ class PaymentStatusRequest(_RequestBase):
 
 
 class PaymentStatusResponse(_ResponseBase):
-    TYPE: ClassVar[str] = "workshoppilot.payment_status_response"
+    TYPE: ClassVar[str] = "EventPilot.payment_status_response"
     payment_id: str = ""
     reservation_id: str = ""
     verification_status: str = ""
@@ -191,7 +191,7 @@ class PaymentStatusResponse(_ResponseBase):
 
 
 class InvitationDraftRequest(_RequestBase):
-    TYPE: ClassVar[str] = "workshoppilot.invitation_draft_request"
+    TYPE: ClassVar[str] = "EventPilot.invitation_draft_request"
     title: str
     event_type: str = "workshop"
     date: str
@@ -202,7 +202,7 @@ class InvitationDraftRequest(_RequestBase):
 
 
 class InvitationDraftResponse(_ResponseBase):
-    TYPE: ClassVar[str] = "workshoppilot.invitation_draft_response"
+    TYPE: ClassVar[str] = "EventPilot.invitation_draft_response"
     invitation_id: str = ""
     draft_version: int = 1
     subject: str = ""
@@ -214,7 +214,7 @@ class InvitationDraftResponse(_ResponseBase):
 
 
 class SendInvitationRequest(_RequestBase):
-    TYPE: ClassVar[str] = "workshoppilot.send_invitation_request"
+    TYPE: ClassVar[str] = "EventPilot.send_invitation_request"
     invitation_id: str
     draft_version: int
     content_hash: str
@@ -233,7 +233,7 @@ class SendResultLine(StrictModel):
 
 
 class SendInvitationResponse(_ResponseBase):
-    TYPE: ClassVar[str] = "workshoppilot.send_invitation_response"
+    TYPE: ClassVar[str] = "EventPilot.send_invitation_response"
     invitation_id: str = ""
     invitation_status: str = ""
     provider_message_ids: list[str] = Field(default_factory=list)
@@ -247,24 +247,24 @@ class SendInvitationResponse(_ResponseBase):
 
 
 class RsvpCountRequest(_RequestBase):
-    TYPE: ClassVar[str] = "workshoppilot.rsvp_count_request"
+    TYPE: ClassVar[str] = "EventPilot.rsvp_count_request"
 
 
 class RsvpCountResponse(_ResponseBase):
-    TYPE: ClassVar[str] = "workshoppilot.rsvp_count_response"
+    TYPE: ClassVar[str] = "EventPilot.rsvp_count_response"
     confirmed_count: int = 0
     capacity: Optional[int] = None
 
 
 class RsvpSubmitRequest(_RequestBase):
-    TYPE: ClassVar[str] = "workshoppilot.rsvp_submit_request"
+    TYPE: ClassVar[str] = "EventPilot.rsvp_submit_request"
     rsvp_code: str
     decision: str = "yes"  # yes | no
     attendee_reference: str = ""
 
 
 class RsvpSubmitResponse(_ResponseBase):
-    TYPE: ClassVar[str] = "workshoppilot.rsvp_submit_response"
+    TYPE: ClassVar[str] = "EventPilot.rsvp_submit_response"
     confirmed_count: int = 0
     already_registered: bool = False
 

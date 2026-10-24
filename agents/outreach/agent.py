@@ -34,7 +34,7 @@ def build_agent() -> Agent:
     if not seed:
         raise SystemExit("OUTREACH_SEED is required to start the outreach agent")
     agent = Agent(
-        name="workshoppilot_outreach",
+        name="eventpilot_outreach",
         seed=seed,
         port=settings.agent_port or 8103,
         endpoint=settings.agent_endpoints(8103),
@@ -44,7 +44,7 @@ def build_agent() -> Agent:
 
     add_status_page(
         agent,
-        service="workshoppilot_outreach",
+        service="eventpilot_outreach",
         hint=(
             "Internal peer agent for the coordinator (invitations and RSVP tracking). "
             "Nothing to open here; the demo is driven from the coordinator."

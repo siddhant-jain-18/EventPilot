@@ -26,7 +26,7 @@ from storage.supplier_repository import SupplierRepository
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Reset WorkshopPilot demo data")
+    parser = argparse.ArgumentParser(description="Reset EventPilot demo data")
     parser.add_argument("--all", action="store_true", help="clear all demo databases")
     parser.add_argument("--owner", default="", help="only reset this sender's coordinator data")
     args = parser.parse_args()

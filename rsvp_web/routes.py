@@ -35,7 +35,7 @@ logger = get_logger("rsvp_web")
 PAGE_TEMPLATE = """<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WorkshopPilot RSVP</title>
+<title>EventPilot RSVP</title>
 <style>
  body {{ font-family: system-ui, sans-serif; max-width: 34rem; margin: 3rem auto; padding: 0 1rem; color: #1a1a2e; }}
  .card {{ border: 1px solid #d8d8e8; border-radius: 12px; padding: 1.5rem; }}
@@ -47,7 +47,7 @@ PAGE_TEMPLATE = """<!doctype html>
 <body>
 <div class="card">
  <h1>You're invited</h1>
- <p>WorkshopPilot demo event <strong>{event_id}</strong>.</p>
+ <p>EventPilot demo event <strong>{event_id}</strong>.</p>
  <p class="muted">Inventory, prices and reservations in this demo are fictional demo data.</p>
  {content}
 </div>
@@ -86,7 +86,7 @@ def build_router(repos, settings) -> APIRouter:
 
     @router.get("/health")
     async def health():
-        return {"status": "ok", "service": "workshoppilot-rsvp"}
+        return {"status": "ok", "service": "EventPilot-rsvp"}
 
     @router.get("/ready")
     async def ready():
@@ -95,7 +95,7 @@ def build_router(repos, settings) -> APIRouter:
             outreach.conn.execute("SELECT 1").fetchone()
         except Exception:
             raise HTTPException(status_code=503, detail="database unavailable")
-        return {"status": "ready", "service": "workshoppilot-rsvp"}
+        return {"status": "ready", "service": "EventPilot-rsvp"}
 
     def _validate_token_or_404(token: str) -> dict:
         try:

@@ -20,7 +20,7 @@ logger = get_logger("supplier.agent")
 def build_protocol(service):
     from uagents import Protocol
 
-    proto = Protocol(name="WorkshopPilotSupplier", version="1.0.0")
+    proto = Protocol(name="EventPilotSupplier", version="1.0.0")
 
     @proto.on_message(QuoteRequest, replies=None)
     async def on_quote_request(ctx, sender, msg):

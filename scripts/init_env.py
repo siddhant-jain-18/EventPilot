@@ -31,7 +31,7 @@ def _replace_value(text: str, key: str, value: str) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Generate a WorkshopPilot .env")
+    parser = argparse.ArgumentParser(description="Generate a EventPilot .env")
     parser.add_argument(
         "--force", action="store_true", help="overwrite an existing .env (rotates secrets)"
     )
@@ -62,7 +62,7 @@ def main() -> int:
     }
     addresses = {
         role: Agent(
-            name=f"workshoppilot_{role.lower()}", seed=seeds[f"{role}_SEED"], resolve=False
+            name=f"eventpilot_{role.lower()}", seed=seeds[f"{role}_SEED"], resolve=False
         ).address
         for role in ("COORDINATOR", "SUPPLIER", "OUTREACH")
     }

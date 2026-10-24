@@ -1,11 +1,11 @@
 [project]
-name = "workshoppilot"
+name = "EventPilot"
 version = "1.0.0"
 description = "Multi-agent workshop coordination with approval-bound execution (Fetch-A-Thon 3.0): a coordinator, a supplier and an outreach uAgent orchestrated from ASI:One."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
-authors = [{ name = "WorkshopPilot team" }]
+authors = [{ name = "EventPilot team" }]
 keywords = ["fetchai", "uagents", "asi-one", "agentverse", "hackathon"]
 dependencies = [
     "uagents==0.25.5",
