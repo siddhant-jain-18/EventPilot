@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import json
 import re
+from types import SimpleNamespace
 
-from shared.messages import ReservationRequest
+from agents.outreach.service import OutreachService
+from shared.messages import ReservationRequest, SendInvitationRequest
 from tests.conftest import Bus, build_harness
 
 BRIEF = (
@@ -343,6 +345,54 @@ def test_planner_mediated_card_click_prose_is_honoured(bus, harness):
     assert "accepted" in text.lower()
     pending = harness.coordinator_repo.pending_approvals_for_owner(sender)
     assert all(a["code"] != code for a in pending)
+
+
+def test_console_mode_exposes_codes_but_smtp_does_not():
+    invitation = {
+        "invitation_id": "I-TEST",
+        "plan_version": 1,
+        "recipient_refs": ["recipient-1"],
+        "status": "sent",
+        "provider_message_ids": [],
+    }
+    request = SendInvitationRequest(
+        event_id="E-TEST",
+        invitation_id="I-TEST",
+        draft_version=1,
+        content_hash="hash",
+        recipient_set_hash="recipient-hash",
+        approval_id="AP-TEST",
+        action_id="ACT-TEST",
+    )
+
+    class Repo:
+        def tokens_for_invitation(self, invitation_id):  # pragma: no cover - smtp test
+            raise AssertionError("SMTP mode must not read RSVP tokens for chat")
+
+    smtp = OutreachService(Repo(), SimpleNamespace(email_provider="smtp"), provider=None)
+    response = smtp._send_response(
+        request, invitation, "completed", rsvp_codes={"recipient-1": "ABC123"}
+    )
+    assert response.results[0].rsvp_code == ""
+
+    console = OutreachService(
+        SimpleNamespace(tokens_for_invitation=lambda invitation_id: []),
+        SimpleNamespace(email_provider="console"),
+        provider=None,
+    )
+    response = console._send_response(
+        request, invitation, "none", rsvp_codes={"recipient-1": "ABC123"}
+    )
+    assert response.results[0].rsvp_code == "ABC123"
+
+
+def test_run_local_keeps_peer_endpoints_local():
+    from scripts.run_local import _processes
+
+    specs = {spec["name"]: spec for spec in _processes()}
+    for peer in ("supplier", "outreach"):
+        assert specs[peer]["env"]["AGENT_MAILBOX"] == "false"
+        assert specs[peer]["env"]["AGENT_ENDPOINT"] == ""
 
 
 def test_bare_yes_with_multiple_pending_asks_for_code(bus, harness):

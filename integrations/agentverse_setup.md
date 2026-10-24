@@ -129,9 +129,9 @@ instead of a mailbox.
    endpoint is configured. Open the **Public inspector** line that the
    coordinator logs when `AGENT_ENDPOINT` is set, or build it yourself:
    `https://agentverse.ai/inspect/?uri=<url-encoded public base>&address=<agent address>`
-   (strip the trailing `/submit` from the URI). From there, use
-   **Connect → Mailbox** only if you also want the relay; otherwise the public
-   endpoint is already the route.
+   (strip the trailing `/submit` from the URI). Do **not** connect a mailbox
+   in this mode: the public endpoint is already the route, and a mailbox that
+   the process is not polling would silently queue messages.
 6. Register the profile in Agentverse (step 4) and chat from ASI:One.
 
 The endpoint must be reachable from the internet. `127.0.0.1`, `localhost`,

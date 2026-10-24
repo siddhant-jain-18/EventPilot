@@ -31,9 +31,12 @@ def _processes() -> list[dict]:
         {
             "name": "supplier",
             "module": "agents.supplier.agent",
+            # Peers stay on localhost: AGENT_MAILBOX/AGENT_ENDPOINT in .env
+            # describe the coordinator's public route, not theirs.
             "env": {
                 "AGENT_PORT": str(DEFAULT_AGENT_PORTS["supplier"]),
                 "AGENT_MAILBOX": "false",
+                "AGENT_ENDPOINT": "",
             },
         },
         {
@@ -42,6 +45,7 @@ def _processes() -> list[dict]:
             "env": {
                 "AGENT_PORT": str(DEFAULT_AGENT_PORTS["outreach"]),
                 "AGENT_MAILBOX": "false",
+                "AGENT_ENDPOINT": "",
             },
         },
         {

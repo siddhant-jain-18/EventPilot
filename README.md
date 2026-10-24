@@ -92,7 +92,7 @@ key is required.
 **macOS / Linux**
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/siddhant-jain-18/EventPilot.git
 cd EventPilot
 python3 -m venv .venv
 source .venv/bin/activate
@@ -101,7 +101,7 @@ source .venv/bin/activate
 **Windows PowerShell** (`python` may be `py -3.12` if the launcher is used)
 
 ```powershell
-git clone <repository-url>
+git clone https://github.com/siddhant-jain-18/EventPilot.git
 cd EventPilot
 py -3.12 -m venv .venv
 .venv\Scripts\Activate.ps1
@@ -117,7 +117,7 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 **Windows Command Prompt**
 
 ```bat
-git clone <repository-url>
+git clone https://github.com/siddhant-jain-18/EventPilot.git
 cd EventPilot
 py -3.12 -m venv .venv
 .venv\Scripts\activate.bat
@@ -348,9 +348,10 @@ ports.
    use the **Public inspector** line the coordinator prints when
    `AGENT_ENDPOINT` is set (or build
    `https://agentverse.ai/inspect/?uri=<url-encoded public base>&address=<agent address>`
-   yourself, without the `/submit` suffix). Use **Connect → Mailbox** only if
-   you also want the relay; otherwise the public endpoint is already the
-   route. Register the profile in Agentverse and chat from ASI:One.
+   yourself, without the `/submit` suffix). Do not connect a mailbox in this
+   mode: the public endpoint is already the route, and a mailbox the process
+   is not polling would silently queue messages. Register the profile in
+   Agentverse and chat from ASI:One.
 
 `AGENT_ENDPOINT` must be the URL ASI:One can reach; `127.0.0.1` and
 `localhost` will fail for remote users. If your platform gives you a single
