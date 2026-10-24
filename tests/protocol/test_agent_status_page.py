@@ -31,3 +31,10 @@ def test_agent_ports_answer_a_status_page_on_root():
     assert status.status == "ok"
     assert status.address == agent.address
     assert status.links == {"agent_info": "/agent_info"}
+
+    health = asyncio.run(agent.handle_rest("GET", "/health", None))
+    assert health.status == "ok"
+    assert health.service == "landing_test"
+
+    ready = asyncio.run(agent.handle_rest("GET", "/ready", None))
+    assert ready.status == "ready"

@@ -22,6 +22,11 @@ class AgentStatus(Model):
     links: Dict[str, str] = {}
 
 
+class HealthStatus(Model):
+    status: str
+    service: str
+
+
 def add_status_page(
     agent,
     *,
@@ -39,3 +44,13 @@ def add_status_page(
             hint=hint,
             links=links or {},
         )
+
+    @agent.on_rest_get("/health", HealthStatus)
+    async def health_page(ctx):  # noqa: ANN001, ARG001 - uAgents passes its Context
+        # Some PaaS configurations expose the agent listener by default. Keep
+        # a real platform probe here as a safe fallback during rollout.
+        return HealthStatus(status="ok", service=service)
+
+    @agent.on_rest_get("/ready", HealthStatus)
+    async def ready_page(ctx):  # noqa: ANN001, ARG001 - uAgents passes its Context
+        return HealthStatus(status="ready", service=service)
